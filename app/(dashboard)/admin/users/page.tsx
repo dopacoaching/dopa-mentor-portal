@@ -18,6 +18,8 @@ const REGIONS = ['calicut', 'kottakkal', 'thrissur', 'ig']
 const REGIONS_LABELS: Record<string, string> = { calicut: 'Calicut', kottakkal: 'Kottakkal', thrissur: 'Thrissur', ig: 'Integrated School (IG)' }
 const ROLES = ['admin', 'class_teacher', 'mentor']
 
+interface CampusOption { _id: string; name: string; region: string }
+
 function UserForm({
   initial,
   onSave,
@@ -30,12 +32,25 @@ function UserForm({
   const [name, setName] = useState(initial?.name ?? '')
   const [username, setUsername] = useState(initial?.username ?? '')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState(initial?.role ?? 'mentor')
+  const [role, setRole] = useState<IUser['role']>(initial?.role ?? 'mentor')
   const [region, setRegion] = useState(initial?.region ?? '')
   const [campus, setCampus] = useState(initial?.campus ?? '')
+  const [campusOptions, setCampusOptions] = useState<CampusOption[]>([])
   const [batchName, setBatchName] = useState(initial?.assignedBatches?.[0]?.batchName ?? '')
   const [batchType, setBatchType] = useState(initial?.assignedBatches?.[0]?.batchType ?? 'residential')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!region) { setCampusOptions([]); setCampus(''); return }
+    fetch(`/api/campuses?region=${region}`)
+      .then((r) => r.json())
+      .then((d) => setCampusOptions(d.campuses ?? []))
+  }, [region])
+
+  function handleRegionChange(v: string) {
+    setRegion(v)
+    setCampus('')
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -53,6 +68,8 @@ function UserForm({
       setSaving(false)
     }
   }
+
+  const needsRegionCampus = role === 'class_teacher' || role === 'mentor'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,7 +90,7 @@ function UserForm({
         </div>
         <div className="space-y-1.5">
           <Label>Role *</Label>
-          <Select value={role} onValueChange={(v) => setRole(v as IUser['role'])}>
+          <Select value={role} onValueChange={(v) => { setRole(v as IUser['role']); setRegion(''); setCampus('') }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {ROLES.map((r) => <SelectItem key={r} value={r}>{roleLabel(r)}</SelectItem>)}
@@ -81,11 +98,11 @@ function UserForm({
           </Select>
         </div>
       </div>
-      {(role === 'class_teacher' || role === 'mentor') && (
-        <div className="grid grid-cols-2 gap-4">
+      {needsRegionCampus && (
+        <>
           <div className="space-y-1.5">
-            <Label>Region</Label>
-            <Select value={region} onValueChange={setRegion}>
+            <Label>Region *</Label>
+            <Select value={region} onValueChange={handleRegionChange}>
               <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
               <SelectContent>
                 {REGIONS.map((r) => <SelectItem key={r} value={r}>{REGIONS_LABELS[r] ?? r}</SelectItem>)}
@@ -93,10 +110,20 @@ function UserForm({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Campus</Label>
-            <Input value={campus} onChange={(e) => setCampus(e.target.value)} placeholder="Campus name" />
+            <Label>Campus *</Label>
+            <Select value={campus} onValueChange={setCampus} disabled={!region}>
+              <SelectTrigger>
+                <SelectValue placeholder={!region ? 'Select region first' : campusOptions.length === 0 ? 'No campuses — add in Campus settings' : 'Select campus'} />
+              </SelectTrigger>
+              <SelectContent>
+                {campusOptions.map((c) => <SelectItem key={c._id} value={c.name}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {region && campusOptions.length === 0 && (
+              <p className="text-xs text-amber-600">No campuses for this region yet. Add them in <strong>Campuses</strong> settings first.</p>
+            )}
           </div>
-        </div>
+        </>
       )}
       {role === 'mentor' && (
         <div className="grid grid-cols-2 gap-4">
