@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Plus, Pencil, ToggleLeft, ToggleRight, KeyRound } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Plus, Pencil, ToggleLeft, ToggleRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,20 +36,47 @@ function UserForm({
   const [region, setRegion] = useState(initial?.region ?? '')
   const [campus, setCampus] = useState(initial?.campus ?? '')
   const [campusOptions, setCampusOptions] = useState<CampusOption[]>([])
+  const [addingCampus, setAddingCampus] = useState(false)
+  const [newCampusName, setNewCampusName] = useState('')
+  const [savingCampus, setSavingCampus] = useState(false)
+  const newCampusInputRef = useRef<HTMLInputElement>(null)
   const [batchName, setBatchName] = useState(initial?.assignedBatches?.[0]?.batchName ?? '')
   const [batchType, setBatchType] = useState(initial?.assignedBatches?.[0]?.batchType ?? 'residential')
   const [saving, setSaving] = useState(false)
 
+  async function loadCampuses(r: string) {
+    const res = await fetch(`/api/campuses?region=${r}`)
+    const d = await res.json()
+    setCampusOptions(d.campuses ?? [])
+  }
+
   useEffect(() => {
     if (!region) { setCampusOptions([]); setCampus(''); return }
-    fetch(`/api/campuses?region=${region}`)
-      .then((r) => r.json())
-      .then((d) => setCampusOptions(d.campuses ?? []))
+    loadCampuses(region)
   }, [region])
 
   function handleRegionChange(v: string) {
     setRegion(v)
     setCampus('')
+  }
+
+  async function handleAddCampus() {
+    if (!newCampusName.trim() || !region) return
+    setSavingCampus(true)
+    try {
+      const r = await fetch('/api/campuses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCampusName.trim(), region }),
+      })
+      const d = await r.json()
+      if (!r.ok) { toast.error(d.error); return }
+      await loadCampuses(region)
+      setCampus(newCampusName.trim())
+      setNewCampusName('')
+      setAddingCampus(false)
+      toast.success('Campus added')
+    } finally { setSavingCampus(false) }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -111,16 +138,38 @@ function UserForm({
           </div>
           <div className="space-y-1.5">
             <Label>Campus *</Label>
-            <Select value={campus} onValueChange={setCampus} disabled={!region}>
+            <Select
+              value={campus}
+              onValueChange={(v) => { if (v === '__add__') { setAddingCampus(true); setTimeout(() => newCampusInputRef.current?.focus(), 50) } else { setCampus(v) } }}
+              disabled={!region}
+            >
               <SelectTrigger>
-                <SelectValue placeholder={!region ? 'Select region first' : campusOptions.length === 0 ? 'No campuses — add in Campus settings' : 'Select campus'} />
+                <SelectValue placeholder={!region ? 'Select region first' : 'Select campus'} />
               </SelectTrigger>
               <SelectContent>
                 {campusOptions.map((c) => <SelectItem key={c._id} value={c.name}>{c.name}</SelectItem>)}
+                <SelectItem value="__add__" className="text-dopa-green font-medium">
+                  + Add campus
+                </SelectItem>
               </SelectContent>
             </Select>
-            {region && campusOptions.length === 0 && (
-              <p className="text-xs text-amber-600">No campuses for this region yet. Add them in <strong>Campuses</strong> settings first.</p>
+            {addingCampus && (
+              <div className="flex gap-2 mt-1.5">
+                <Input
+                  ref={newCampusInputRef}
+                  value={newCampusName}
+                  onChange={(e) => setNewCampusName(e.target.value)}
+                  placeholder="Campus name"
+                  className="text-sm"
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCampus() } if (e.key === 'Escape') { setAddingCampus(false); setNewCampusName('') } }}
+                />
+                <Button type="button" size="sm" onClick={handleAddCampus} disabled={savingCampus || !newCampusName.trim()}>
+                  {savingCampus ? '...' : 'Add'}
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => { setAddingCampus(false); setNewCampusName('') }}>
+                  ✕
+                </Button>
+              </div>
             )}
           </div>
         </>

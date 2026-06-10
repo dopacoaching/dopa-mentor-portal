@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, CheckSquare, MapPin, MessageSquare,
-  FileText, DollarSign, BarChart2, Bell, X, BookOpen, Building2,
+  FileText, DollarSign, BarChart2, Bell, X, BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
@@ -24,7 +24,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Visits', href: '/admin/visits', icon: MapPin, roles: ['admin'] },
   { label: 'Payments', href: '/admin/payments', icon: DollarSign, roles: ['admin'] },
   { label: 'Reports', href: '/admin/reports', icon: BarChart2, roles: ['admin'] },
-  { label: 'Campuses', href: '/admin/campuses', icon: Building2, roles: ['admin'] },
 
   { label: 'Dashboard', href: '/class-teacher', icon: LayoutDashboard, roles: ['class_teacher'] },
   { label: 'Verify Tasks', href: '/class-teacher/verify', icon: CheckSquare, roles: ['class_teacher'] },
