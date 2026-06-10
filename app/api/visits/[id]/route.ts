@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { connectDB } from '@/lib/mongodb'
+import { requireAuth, isAuthResult } from '@/lib/middleware'
+import Visit from '@/models/Visit'
+
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  const authResult = await requireAuth(request)
+  if (!isAuthResult(authResult)) return authResult
+
+  await connectDB()
+  const visit = await Visit.findById(params.id)
+    .populate('mentorId', 'name username campus')
+    .populate('classTeacherId', 'name')
+
+  if (!visit) return NextResponse.json({ error: 'Visit not found' }, { status: 404 })
+
+  const { user } = authResult
+  if (user.role === 'mentor' && visit.mentorId._id.toString() !== user.userId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  return NextResponse.json({ visit })
+}
+
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+  const authResult = await requireAuth(request)
+  if (!isAuthResult(authResult)) return authResult
+
+  await connectDB()
+  const body = await request.json()
+  const visit = await Visit.findById(params.id)
+  if (!visit) return NextResponse.json({ error: 'Visit not found' }, { status: 404 })
+
+  const { user } = authResult
+  if (user.role === 'mentor' && visit.mentorId.toString() !== user.userId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  Object.assign(visit, body)
+  await visit.save()
+  return NextResponse.json({ visit })
+}

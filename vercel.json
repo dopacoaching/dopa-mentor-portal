@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/auto-close-tasks",
+      "schedule": "59 23 * * *"
+    },
+    {
+      "path": "/api/cron/check-consecutive-misses",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/check-unverified-tasks",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
