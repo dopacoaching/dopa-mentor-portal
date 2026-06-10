@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -63,15 +64,9 @@ export default function Sidebar() {
           'lg:translate-x-0'
         )}
       >
-        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-dopa-green flex items-center justify-center">
-              <span className="text-white font-bold text-sm">D</span>
-            </div>
-            <div>
-              <p className="text-white font-semibold text-sm leading-none">DOPA Coaching</p>
-              <p className="text-white/50 text-xs mt-0.5">Mentor Portal</p>
-            </div>
+        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+          <div className="bg-white rounded-xl px-3 py-2 flex-1 mr-2">
+            <Image src="/logo.png" alt="DOPA Mentor Portal" width={160} height={54} className="object-contain w-full" />
           </div>
           <button
             className="lg:hidden text-white/60 hover:text-white"
