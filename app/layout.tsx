@@ -5,6 +5,7 @@ import { ReduxProvider } from '@/store/providers'
 import { Toaster } from '@/components/ui/sonner'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import PWAInstallBanner from '@/components/PWAInstallBanner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ReduxProvider>
             {children}
             <Toaster richColors position="top-right" />
+            <PWAInstallBanner />
           </ReduxProvider>
         </ThemeProvider>
         <ServiceWorkerRegister />
