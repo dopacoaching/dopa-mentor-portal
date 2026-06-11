@@ -65,8 +65,8 @@ export default function Sidebar() {
         )}
       >
         <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
-          <div className="bg-white rounded-xl px-3 py-2 flex-1 mr-2">
-            <Image src="/logo.png" alt="DOPA Mentor Portal" width={160} height={54} className="object-contain w-full" />
+          <div className="bg-white rounded-xl px-2 py-1.5 flex-1 mr-2 flex items-center justify-center">
+            <Image src="/logo.png" alt="DOPA Mentor Portal" width={110} height={36} className="object-contain" />
           </div>
           <button
             className="lg:hidden text-white/60 hover:text-white"

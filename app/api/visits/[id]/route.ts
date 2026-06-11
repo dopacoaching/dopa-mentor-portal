@@ -36,7 +36,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  Object.assign(visit, body)
+  const ADMIN_FIELDS = ['visitDate', 'visitType', 'batchId', 'campus', 'status', 'mentorReportSubmitted', 'ctReviewSubmitted', 'countedForPayment']
+  const MENTOR_FIELDS = ['mentorChangeReason']
+  const allowed = user.role === 'admin' ? ADMIN_FIELDS : user.role === 'class_teacher' ? ADMIN_FIELDS : MENTOR_FIELDS
+  const safe = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)))
+
+  Object.assign(visit, safe)
   await visit.save()
   return NextResponse.json({ visit })
 }

@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
     activeMentors,
     activeClassTeachers,
     todayLogs,
-    mentorCount,
     pendingVerifications,
     upcomingVisits,
     doubtLogs,
@@ -32,7 +31,6 @@ export async function GET(request: NextRequest) {
     User.countDocuments({ role: 'mentor', isActive: true }),
     User.countDocuments({ role: 'class_teacher', isActive: true }),
     TaskLog.find({ date: { $gte: todayStart, $lte: todayEnd } }).populate('mentorId', 'name campus assignedBatches'),
-    User.countDocuments({ role: 'mentor', isActive: true }),
     TaskLog.find({ status: 'submitted', date: { $lt: now } }).populate('mentorId', 'name assignedBatches').sort({ createdAt: 1 }),
     Visit.find({ visitDate: { $gte: now, $lte: sevenDaysLater }, status: { $in: ['scheduled', 'confirmed'] } })
       .populate('mentorId', 'name')
@@ -85,7 +83,7 @@ export async function GET(request: NextRequest) {
     activeClassTeachers,
     todayTaskCompletion: {
       completed: todayLogs.length,
-      total: mentorCount,
+      total: activeMentors,
     },
     pendingVerifications: pendingVerifications.length,
     missedToday,

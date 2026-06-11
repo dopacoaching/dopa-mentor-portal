@@ -121,7 +121,7 @@ export default function MentorDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">{pendingVisit.campus}</p>
-                <p className="text-sm text-gray-500">{formatDate(pendingVisit.visitDate)} · {pendingVisit.visitType === 'campus_group' ? 'Group Visit' : 'One-to-One'}</p>
+                <p className="text-sm text-gray-500">{formatDate(pendingVisit.visitDate)} · {pendingVisit.visitType === 'campus_group' ? 'Group Visit' : pendingVisit.visitType === 'merged_group' ? 'Merged Group' : 'One-to-One'}</p>
               </div>
               <Badge variant={pendingVisit.status === 'confirmed' ? 'success' : 'warning'}>
                 {pendingVisit.status}

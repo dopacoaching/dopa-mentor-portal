@@ -9,7 +9,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
   await connectDB()
   const body = await request.json()
-  const directive = await Directive.findByIdAndUpdate(params.id, body, { new: true })
+  const { title, content, targetScope, targetRegion, targetCampus, targetMentorId, isActive } = body
+  const updates: Record<string, unknown> = {}
+  if (title !== undefined) updates.title = title
+  if (content !== undefined) updates.content = content
+  if (targetScope !== undefined) updates.targetScope = targetScope
+  if (targetRegion !== undefined) updates.targetRegion = targetRegion ?? null
+  if (targetCampus !== undefined) updates.targetCampus = targetCampus ?? null
+  if (targetMentorId !== undefined) updates.targetMentorId = targetMentorId ?? null
+  if (isActive !== undefined) updates.isActive = isActive
+  const directive = await Directive.findByIdAndUpdate(params.id, { $set: updates }, { new: true })
   if (!directive) return NextResponse.json({ error: 'Directive not found' }, { status: 404 })
   return NextResponse.json({ directive })
 }

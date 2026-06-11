@@ -99,7 +99,7 @@ export default function MentorVisitsPage() {
         <div className="space-y-3">
           {visits.map((visit) => {
             const isPast = new Date(visit.visitDate) < today
-            const canSubmitReport = isPast && visit.status === 'completed' && !visit.mentorReportSubmitted
+            const canSubmitReport = isPast && !visit.mentorReportSubmitted && visit.status !== 'missed'
             return (
               <Card key={visit._id}>
                 <CardContent className="pt-4 pb-4">
