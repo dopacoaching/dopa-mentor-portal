@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dopa-portal-v1';
+const CACHE_NAME = 'dopa-portal-v2';
 const STATIC_ASSETS = ['/logo.png', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
