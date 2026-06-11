@@ -1,13 +1,14 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { Menu, LogOut, ChevronRight } from 'lucide-react'
+import { Menu, LogOut, ChevronRight, Sun, Moon } from 'lucide-react'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { clearAuth } from '@/store/slices/authSlice'
 import { clearNotifications } from '@/store/slices/notificationSlice'
 import { toggleSidebar } from '@/store/slices/uiSlice'
 import { roleLabel } from '@/lib/utils'
 import NotificationBell from './NotificationBell'
+import { useTheme } from '@/components/ThemeProvider'
 import { toast } from 'sonner'
 
 function getBreadcrumb(pathname: string): string[] {
@@ -22,6 +23,7 @@ export default function TopBar() {
   const pathname = usePathname()
   const dispatch = useAppDispatch()
   const { name, role } = useAppSelector((s) => s.auth)
+  const { theme, toggleTheme } = useTheme()
   const breadcrumbs = getBreadcrumb(pathname)
 
   async function handleLogout() {
@@ -33,7 +35,7 @@ export default function TopBar() {
   }
 
   return (
-    <header className="h-14 bg-white border-b flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10">
+    <header className="h-14 bg-white dark:bg-slate-900 border-b dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10">
       <div className="flex items-center gap-3">
         <button
           className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
@@ -55,13 +57,20 @@ export default function TopBar() {
 
       <div className="flex items-center gap-2">
         <NotificationBell />
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 transition-colors"
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
         <div className="hidden sm:flex flex-col items-end mr-1">
-          <span className="text-sm font-medium text-gray-900 leading-none">{name}</span>
-          <span className="text-xs text-gray-400 mt-0.5">{role ? roleLabel(role) : ''}</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-slate-100 leading-none">{name}</span>
+          <span className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{role ? roleLabel(role) : ''}</span>
         </div>
         <button
           onClick={handleLogout}
-          className="p-2 rounded-lg hover:bg-red-50 hover:text-red-600 text-gray-500 transition-colors"
+          className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 text-gray-500 dark:text-slate-400 transition-colors"
           title="Logout"
         >
           <LogOut className="w-4 h-4" />

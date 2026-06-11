@@ -4,6 +4,7 @@ import './globals.css'
 import { ReduxProvider } from '@/store/providers'
 import { Toaster } from '@/components/ui/sonner'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -35,10 +36,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ReduxProvider>
-          {children}
-          <Toaster richColors position="top-right" />
-        </ReduxProvider>
+        <ThemeProvider>
+          <ReduxProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </ReduxProvider>
+        </ThemeProvider>
         <ServiceWorkerRegister />
       </body>
     </html>

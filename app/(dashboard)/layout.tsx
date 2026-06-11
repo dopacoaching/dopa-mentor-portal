@@ -7,7 +7,7 @@ import { useNotifications } from '@/hooks/useNotifications'
 function DashboardInner({ children }: { children: React.ReactNode }) {
   useNotifications()
   return (
-    <div className="flex h-screen bg-[#F8FAFC]">
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-slate-950">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
         <TopBar />

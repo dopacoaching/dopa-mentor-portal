@@ -40,16 +40,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dopa-light px-4">
+    <div className="min-h-screen flex items-center justify-center bg-dopa-light dark:bg-slate-950 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg overflow-hidden">
           <div className="px-8 pt-8 pb-4 flex justify-center">
             <Image src="/logo.png" alt="DOPA Mentor Portal" width={180} height={64} priority className="object-contain" />
           </div>
 
           <form onSubmit={handleSubmit} className="px-8 py-8 space-y-5">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
                 Username
               </label>
               <input
@@ -60,12 +60,12 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-dopa-green focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-dopa-green focus:border-transparent transition"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
                 Password
               </label>
               <input
@@ -76,14 +76,14 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-dopa-green focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-dopa-green focus:border-transparent transition"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-dopa-green text-white py-2.5 rounded-lg font-medium hover:bg-green-800 transition disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              className="w-full bg-dopa-green text-white py-2.5 rounded-lg font-medium hover:bg-green-800 transition disabled:opacity-60 disabled:cursor-not-allowed mt-2 dark:hover:bg-green-700"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
