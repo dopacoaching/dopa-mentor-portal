@@ -16,6 +16,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'DOPA Portal',
   },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
   icons: {
     icon: '/logo.png',
     apple: '/logo.png',
