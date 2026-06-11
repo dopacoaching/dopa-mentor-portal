@@ -15,11 +15,11 @@ import type { IDoubtLog } from '@/types'
 interface Summary { physics: number; chemistry: number; biology: number; mathematics: number; general: number; total: number }
 
 const SUBJECTS = [
-  { key: 'physics', label: 'Physics', color: 'text-blue-700' },
-  { key: 'chemistry', label: 'Chemistry', color: 'text-green-700' },
-  { key: 'biology', label: 'Biology', color: 'text-yellow-700' },
-  { key: 'mathematics', label: 'Mathematics', color: 'text-purple-700' },
-  { key: 'general', label: 'General', color: 'text-gray-700' },
+  { key: 'physics', label: 'Physics', color: 'text-blue-700 dark:text-blue-300' },
+  { key: 'chemistry', label: 'Chemistry', color: 'text-green-700 dark:text-green-300' },
+  { key: 'biology', label: 'Biology', color: 'text-yellow-700 dark:text-yellow-300' },
+  { key: 'mathematics', label: 'Mathematics', color: 'text-purple-700 dark:text-purple-300' },
+  { key: 'general', label: 'General', color: 'text-gray-700 dark:text-slate-400' },
 ] as const
 
 export default function MentorDoubtsPage() {
@@ -109,7 +109,7 @@ export default function MentorDoubtsPage() {
             className={summary.total >= 300 ? '[&>div]:bg-green-600' : summary.total >= 200 ? '[&>div]:bg-yellow-500' : '[&>div]:bg-red-500'}
           />
           {summary.total >= 300 && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-sm text-green-800 dark:text-green-200">
               <strong>Earning bonus!</strong> +{extraDoubts} extra doubts = ₹{extraPay.toLocaleString()} extra pay
             </div>
           )}
@@ -137,12 +137,12 @@ export default function MentorDoubtsPage() {
           {!showForm ? (
             <div className="grid grid-cols-2 gap-2 text-sm">
               {SUBJECTS.map(({ key, label }) => (
-                <div key={key} className="flex justify-between border-b py-1.5 last:border-0">
-                  <span className="text-gray-600">{label}</span>
+                <div key={key} className="flex justify-between border-b dark:border-slate-700 py-1.5 last:border-0">
+                  <span className="text-gray-600 dark:text-slate-400">{label}</span>
                   <span className="font-medium">{todayLog?.subjects[key as keyof typeof todayLog.subjects] ?? 0}</span>
                 </div>
               ))}
-              <div className="col-span-2 flex justify-between pt-2 border-t font-semibold text-sm">
+              <div className="col-span-2 flex justify-between pt-2 border-t dark:border-slate-700 font-semibold text-sm">
                 <span>Total</span>
                 <span>{todayLog?.totalForDay ?? 0}</span>
               </div>
@@ -163,7 +163,7 @@ export default function MentorDoubtsPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between text-sm text-gray-500 pb-1">
+              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-slate-400 pb-1">
                 <span>Total for today</span>
                 <span className="font-semibold">{Object.values(values).reduce((a, b) => a + b, 0)}</span>
               </div>
@@ -186,7 +186,7 @@ export default function MentorDoubtsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-500 border-b">
+                <tr className="text-xs text-gray-500 dark:text-slate-400 border-b dark:border-slate-700">
                   <th className="text-left py-2">Date</th>
                   <th className="text-right py-2">Phy</th>
                   <th className="text-right py-2">Chem</th>
@@ -196,10 +196,10 @@ export default function MentorDoubtsPage() {
                   <th className="text-right py-2 font-semibold">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y dark:divide-slate-700">
                 {logs.map((log) => (
-                  <tr key={log._id} className="hover:bg-gray-50">
-                    <td className="py-2 text-gray-600">{formatDate(log.date)}</td>
+                  <tr key={log._id} className="hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                    <td className="py-2 text-gray-600 dark:text-slate-400">{formatDate(log.date)}</td>
                     <td className="text-right py-2">{log.subjects.physics}</td>
                     <td className="text-right py-2">{log.subjects.chemistry}</td>
                     <td className="text-right py-2">{log.subjects.biology}</td>
@@ -209,7 +209,7 @@ export default function MentorDoubtsPage() {
                   </tr>
                 ))}
                 {logs.length === 0 && (
-                  <tr><td colSpan={7} className="py-8 text-center text-gray-400">No entries this month</td></tr>
+                  <tr><td colSpan={7} className="py-8 text-center text-gray-400 dark:text-slate-500">No entries this month</td></tr>
                 )}
               </tbody>
             </table>

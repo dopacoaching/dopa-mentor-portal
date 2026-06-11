@@ -71,7 +71,7 @@ export default function CTVisitsPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+        <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />)}</div>
       ) : visits.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <MapPin className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -84,12 +84,12 @@ export default function CTVisitsPage() {
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-dopa-light flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-dopa-light dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
                       <MapPin className="w-4 h-4 text-dopa-green" />
                     </div>
                     <div>
                       <p className="font-medium text-sm">{visit.mentorId?.name ?? 'Unknown'}</p>
-                      <p className="text-xs text-gray-500">{visit.campus} · {formatDate(visit.visitDate)} · {visit.visitType === 'campus_group' ? 'Group' : visit.visitType === 'merged_group' ? 'Merged Group' : '1-on-1'}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{visit.campus} · {formatDate(visit.visitDate)} · {visit.visitType === 'campus_group' ? 'Group' : visit.visitType === 'merged_group' ? 'Merged Group' : '1-on-1'}</p>
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         {STATUS_BADGE[visit.status]}
                         {visit.mentorReportSubmitted && <Badge variant="success" className="text-xs">Report ✓</Badge>}
@@ -99,7 +99,7 @@ export default function CTVisitsPage() {
                     </div>
                   </div>
                   {visit.mentorChangeReason && (
-                    <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded max-w-[180px]">
+                    <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded max-w-[180px]">
                       Change: {visit.mentorChangeReason}
                     </div>
                   )}

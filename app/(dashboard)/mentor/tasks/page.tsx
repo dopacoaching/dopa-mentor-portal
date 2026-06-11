@@ -23,12 +23,12 @@ function statusBadge(status: string) {
 }
 
 function getDayColor(log: ITaskLog | undefined, date: Date): string {
-  if (date > new Date()) return 'bg-gray-100 text-gray-400'
-  if (!log) return 'bg-red-100 text-red-700'
+  if (date > new Date()) return 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500'
+  if (!log) return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
   const completed = log.tasks.filter((t) => t.completed).length
-  if (completed === 9) return 'bg-green-100 text-green-800'
-  if (completed > 0) return 'bg-yellow-100 text-yellow-800'
-  return 'bg-red-100 text-red-700'
+  if (completed === 9) return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+  if (completed > 0) return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
+  return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
 }
 
 export default function MentorTasksPage() {
@@ -123,8 +123,8 @@ export default function MentorTasksPage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Daily Tasks</h1>
-        <p className="text-sm text-gray-500 mt-0.5">{today.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Daily Tasks</h1>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{today.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
       </div>
 
       <Card>
@@ -132,7 +132,7 @@ export default function MentorTasksPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Today's Checklist</CardTitle>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">{completedCount}/9 completed</span>
+              <span className="text-sm text-gray-500 dark:text-slate-400">{completedCount}/9 completed</span>
               {todayLog && statusBadge(todayLog.status)}
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function MentorTasksPage() {
             const deadline = TASK_DEADLINES[key]
             const deadlinePassed = deadline === '9:00 AM' ? new Date().getHours() >= 9 : new Date().getHours() >= 20
             return (
-              <div key={key} className={`border rounded-xl p-3 transition-colors ${t.completed ? 'bg-green-50 border-green-200' : 'bg-white'}`}>
+              <div key={key} className={`border rounded-xl p-3 transition-colors ${t.completed ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-white dark:bg-slate-800/50 dark:border-slate-700'}`}>
                 <div className="flex items-start gap-3">
                   <button
                     onClick={() => toggleTask(key)}
@@ -156,11 +156,11 @@ export default function MentorTasksPage() {
                   </button>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-sm font-medium ${t.completed ? 'text-green-800' : 'text-gray-800'}`}>
+                      <span className={`text-sm font-medium ${t.completed ? 'text-green-800 dark:text-green-200' : 'text-gray-800 dark:text-slate-200'}`}>
                         {TASK_NAMES[key]}
                       </span>
                       {deadline && (
-                        <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ${deadlinePassed && !t.completed ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
+                        <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ${deadlinePassed && !t.completed ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400'}`}>
                           <Clock className="w-3 h-3" /> {deadline}
                         </span>
                       )}
@@ -174,7 +174,7 @@ export default function MentorTasksPage() {
                       />
                     )}
                     {t.completed && isSubmitted && t.note && (
-                      <p className="text-xs text-gray-500 mt-1">{t.note}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">{t.note}</p>
                     )}
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export default function MentorTasksPage() {
               {saving ? 'Saving...' : isSubmitted ? 'Report Already Submitted' : 'Save Task Report'}
             </Button>
             {isSubmitted && todayLog?.verificationNote && (
-              <p className="mt-2 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
+              <p className="mt-2 text-sm text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-3 py-2 rounded-lg">
                 <strong>Feedback:</strong> {todayLog.verificationNote}
               </p>
             )}
@@ -204,7 +204,7 @@ export default function MentorTasksPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Monthly Overview</CardTitle>
             <div className="flex items-center gap-2">
-              <button onClick={() => setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))} className="p-1.5 rounded hover:bg-gray-100">
+              <button onClick={() => setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700">
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <span className="text-sm font-medium w-28 text-center">
@@ -213,7 +213,7 @@ export default function MentorTasksPage() {
               <button
                 onClick={() => setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1))}
                 disabled={isToday}
-                className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30"
+                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -223,7 +223,7 @@ export default function MentorTasksPage() {
         <CardContent>
           <div className="grid grid-cols-7 gap-1 text-center mb-1">
             {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-              <div key={d} className="text-xs font-medium text-gray-400 py-1">{d}</div>
+              <div key={d} className="text-xs font-medium text-gray-400 dark:text-slate-500 py-1">{d}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-1">
@@ -244,11 +244,11 @@ export default function MentorTasksPage() {
               )
             })}
           </div>
-          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-green-100 inline-block" />All done</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-yellow-100 inline-block" />Partial</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-100 inline-block" />Missed</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-100 inline-block" />Future</span>
+          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/30 inline-block" />All done</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-yellow-100 dark:bg-yellow-900/30 inline-block" />Partial</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-100 dark:bg-red-900/30 inline-block" />Missed</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-100 dark:bg-slate-700 inline-block" />Future</span>
           </div>
         </CardContent>
       </Card>
@@ -264,23 +264,23 @@ export default function MentorTasksPage() {
             <div className="space-y-2 max-h-96 overflow-y-auto">
               <div className="flex items-center gap-2 mb-3">
                 {statusBadge(selectedLog.status)}
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-slate-400">
                   {selectedLog.tasks.filter((t) => t.completed).length}/9 completed
                 </span>
               </div>
               {selectedLog.tasks.map((t) => (
-                <div key={t.taskKey} className={`flex items-start gap-2.5 p-2.5 rounded-lg ${t.completed ? 'bg-green-50' : 'bg-gray-50'}`}>
+                <div key={t.taskKey} className={`flex items-start gap-2.5 p-2.5 rounded-lg ${t.completed ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-slate-800'}`}>
                   {t.completed
                     ? <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                     : <Circle className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5" />}
                   <div>
                     <p className="text-sm font-medium">{t.taskName}</p>
-                    {t.note && <p className="text-xs text-gray-500 mt-0.5">{t.note}</p>}
+                    {t.note && <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t.note}</p>}
                   </div>
                 </div>
               ))}
               {selectedLog.verificationNote && (
-                <div className="mt-3 p-3 bg-orange-50 rounded-lg text-sm text-orange-700">
+                <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-sm text-orange-700 dark:text-orange-300">
                   <strong>Feedback:</strong> {selectedLog.verificationNote}
                 </div>
               )}

@@ -58,14 +58,14 @@ export default function ClassTeacherDashboard() {
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base">Recent Task Submissions</CardTitle></CardHeader>
           <CardContent>
-            {loading ? <div className="h-32 animate-pulse bg-gray-100 rounded" /> :
-              recentLogs.length === 0 ? <p className="text-sm text-gray-400 py-4 text-center">No submissions yet</p> :
+            {loading ? <div className="h-32 animate-pulse bg-gray-100 dark:bg-slate-800 rounded" /> :
+              recentLogs.length === 0 ? <p className="text-sm text-gray-400 dark:text-slate-500 py-4 text-center">No submissions yet</p> :
               <div className="space-y-2">
                 {recentLogs.map((log) => (
-                  <div key={log._id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
+                  <div key={log._id} className="flex items-center justify-between text-sm py-1.5 border-b dark:border-slate-700 last:border-0">
                     <div>
                       <p className="font-medium">{log.mentorId?.name ?? 'Unknown'}</p>
-                      <p className="text-xs text-gray-400">{formatDate(log.date)} · {log.tasks.filter((t) => t.completed).length}/9</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{formatDate(log.date)} · {log.tasks.filter((t) => t.completed).length}/9</p>
                     </div>
                     <Badge variant={log.status === 'submitted' ? 'warning' : log.status === 'verified' ? 'success' : 'destructive'}>
                       {log.status}
@@ -79,14 +79,14 @@ export default function ClassTeacherDashboard() {
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base">Upcoming Visits</CardTitle></CardHeader>
           <CardContent>
-            {loading ? <div className="h-32 animate-pulse bg-gray-100 rounded" /> :
-              upcomingVisits.length === 0 ? <p className="text-sm text-gray-400 py-4 text-center">No visits scheduled</p> :
+            {loading ? <div className="h-32 animate-pulse bg-gray-100 dark:bg-slate-800 rounded" /> :
+              upcomingVisits.length === 0 ? <p className="text-sm text-gray-400 dark:text-slate-500 py-4 text-center">No visits scheduled</p> :
               <div className="space-y-2">
                 {upcomingVisits.map((v) => (
                   <div key={v._id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
                     <div>
                       <p className="font-medium">{v.campus}</p>
-                      <p className="text-xs text-gray-400">{formatDate(v.visitDate)}</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{formatDate(v.visitDate)}</p>
                     </div>
                     <Badge variant={v.status === 'confirmed' ? 'success' : 'warning'}>{v.status}</Badge>
                   </div>

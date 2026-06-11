@@ -49,15 +49,15 @@ export default function MentorDashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Hello, {name?.split(' ')[0]} 👋</h1>
-        <p className="text-sm text-gray-500 mt-0.5">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </div>
 
       {directives.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Active Directive</p>
-          <p className="font-semibold text-amber-900">{directives[0].title}</p>
-          <p className="text-sm text-amber-700 mt-1 line-clamp-2">{directives[0].content}</p>
-          <button onClick={() => router.push('/mentor/directives')} className="text-xs text-amber-600 underline mt-1">View full directive</button>
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide mb-1">Active Directive</p>
+          <p className="font-semibold text-amber-900 dark:text-amber-200">{directives[0].title}</p>
+          <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 line-clamp-2">{directives[0].content}</p>
+          <button onClick={() => router.push('/mentor/directives')} className="text-xs text-amber-600 dark:text-amber-400 underline mt-1">View full directive</button>
         </div>
       )}
 
@@ -82,7 +82,7 @@ export default function MentorDashboard() {
         <Card>
           <CardContent className="pt-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Doubt Progress</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Doubt Progress</span>
               <Badge variant={doubtSummary.total >= 300 ? 'success' : 'secondary'}>{doubtSummary.total}/300</Badge>
             </div>
             <Progress value={Math.min(100, progressPct)} />
@@ -94,7 +94,7 @@ export default function MentorDashboard() {
 
         <Card>
           <CardContent className="pt-5">
-            <p className="text-sm font-medium text-gray-700 mb-3">Quick Actions</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-3">Quick Actions</p>
             <div className="space-y-2">
               <Button size="sm" className="w-full" onClick={() => router.push('/mentor/tasks')}>
                 <CheckSquare className="w-3.5 h-3.5 mr-1.5" /> Today's Checklist
@@ -121,7 +121,7 @@ export default function MentorDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">{pendingVisit.campus}</p>
-                <p className="text-sm text-gray-500">{formatDate(pendingVisit.visitDate)} · {pendingVisit.visitType === 'campus_group' ? 'Group Visit' : pendingVisit.visitType === 'merged_group' ? 'Merged Group' : 'One-to-One'}</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400">{formatDate(pendingVisit.visitDate)} · {pendingVisit.visitType === 'campus_group' ? 'Group Visit' : pendingVisit.visitType === 'merged_group' ? 'Merged Group' : 'One-to-One'}</p>
               </div>
               <Badge variant={pendingVisit.status === 'confirmed' ? 'success' : 'warning'}>
                 {pendingVisit.status}

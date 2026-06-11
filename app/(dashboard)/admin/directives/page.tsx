@@ -118,9 +118,9 @@ export default function AdminDirectivesPage() {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Active</h2>
-        {loading ? [...Array(2)].map((_, i) => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />) :
-          active.length === 0 ? <p className="text-sm text-gray-400 py-4">No active directives</p> :
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Active</h2>
+        {loading ? [...Array(2)].map((_, i) => <div key={i} className="h-24 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />) :
+          active.length === 0 ? <p className="text-sm text-gray-400 dark:text-slate-500 py-4">No active directives</p> :
           active.map((d) => (
             <Card key={d._id}>
               <CardContent className="pt-4 pb-4">
@@ -130,14 +130,14 @@ export default function AdminDirectivesPage() {
                       <p className="font-semibold">{d.title}</p>
                       <Badge variant="info" className="text-xs">{d.targetScope === 'all' ? 'All' : d.targetRegion || d.targetCampus || 'Individual'}</Badge>
                     </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">{d.content}</p>
-                    <p className="text-xs text-gray-400 mt-1">Expires {formatDate(d.expiresAt)}</p>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 line-clamp-2">{d.content}</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Expires {formatDate(d.expiresAt)}</p>
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => { setEditDirective(d); setForm({ title: d.title, content: d.content, targetScope: d.targetScope, targetRegion: d.targetRegion ?? '', targetCampus: d.targetCampus ?? '', targetMentorId: '' }) }} className="p-1.5 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600">
+                    <button onClick={() => { setEditDirective(d); setForm({ title: d.title, content: d.content, targetScope: d.targetScope, targetRegion: d.targetRegion ?? '', targetCampus: d.targetCampus ?? '', targetMentorId: '' }) }} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300">
                       <Pencil className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleArchive(d._id)} className="p-1.5 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600">
+                    <button onClick={() => handleArchive(d._id)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300">
                       <Archive className="w-4 h-4" />
                     </button>
                   </div>
@@ -149,11 +149,11 @@ export default function AdminDirectivesPage() {
 
       {archived.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Archived</h2>
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Archived</h2>
           {archived.map((d) => (
-            <div key={d._id} className="border rounded-xl p-4 opacity-60 bg-gray-50">
+            <div key={d._id} className="border dark:border-slate-700 rounded-xl p-4 opacity-60 bg-gray-50 dark:bg-slate-800">
               <p className="font-medium text-sm">{d.title}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{d.targetScope} · {formatDate(d.publishedAt)}</p>
+              <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{d.targetScope} · {formatDate(d.publishedAt)}</p>
             </div>
           ))}
         </div>

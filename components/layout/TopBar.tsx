@@ -38,16 +38,16 @@ export default function TopBar() {
     <header className="h-14 bg-white dark:bg-slate-900 border-b dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10">
       <div className="flex items-center gap-3">
         <button
-          className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 lg:hidden"
           onClick={() => dispatch(toggleSidebar())}
         >
-          <Menu className="w-5 h-5 text-gray-600" />
+          <Menu className="w-5 h-5 text-gray-600 dark:text-slate-400" />
         </button>
-        <nav className="hidden sm:flex items-center gap-1 text-sm text-gray-500">
+        <nav className="hidden sm:flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400">
           {breadcrumbs.map((crumb, i) => (
             <span key={i} className="flex items-center gap-1">
               {i > 0 && <ChevronRight className="w-3 h-3" />}
-              <span className={i === breadcrumbs.length - 1 ? 'text-gray-900 font-medium' : ''}>
+              <span className={i === breadcrumbs.length - 1 ? 'text-gray-900 dark:text-slate-100 font-medium' : ''}>
                 {crumb}
               </span>
             </span>

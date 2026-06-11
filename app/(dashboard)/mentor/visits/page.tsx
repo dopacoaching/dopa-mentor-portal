@@ -89,11 +89,11 @@ export default function MentorVisitsPage() {
       <h1 className="text-2xl font-bold">My Visits</h1>
 
       {loading ? (
-        <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+        <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />)}</div>
       ) : visits.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <MapPin className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p>No visits scheduled this month</p>
+          <p className="dark:text-slate-500">No visits scheduled this month</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -105,14 +105,14 @@ export default function MentorVisitsPage() {
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-dopa-light flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-dopa-light dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
                         <MapPin className="w-5 h-5 text-dopa-green" />
                       </div>
                       <div>
                         <p className="font-semibold">{visit.campus}</p>
-                        <p className="text-sm text-gray-500">{formatDate(visit.visitDate)} · {visit.visitType === 'campus_group' ? 'Group Visit' : visit.visitType === 'merged_group' ? 'Merged Group' : 'One-to-One'}</p>
+                        <p className="text-sm text-gray-500 dark:text-slate-400">{formatDate(visit.visitDate)} · {visit.visitType === 'campus_group' ? 'Group Visit' : visit.visitType === 'merged_group' ? 'Merged Group' : 'One-to-One'}</p>
                         {visit.mentorChangeReason && (
-                          <p className="text-xs text-gray-400 mt-1">Reason: {visit.mentorChangeReason}</p>
+                          <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Reason: {visit.mentorChangeReason}</p>
                         )}
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           {STATUS_BADGE[visit.status]}
@@ -149,7 +149,7 @@ export default function MentorVisitsPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Request Visit Change</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm text-gray-600">Please explain why you need to reschedule:</p>
+            <p className="text-sm text-gray-600 dark:text-slate-400">Please explain why you need to reschedule:</p>
             <Textarea value={changeReason} onChange={(e) => setChangeReason(e.target.value)} placeholder="Reason for change..." className="h-24" />
           </div>
           <DialogFooter>

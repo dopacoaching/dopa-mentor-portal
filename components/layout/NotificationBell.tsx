@@ -20,9 +20,9 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
       >
-        <Bell className="w-5 h-5 text-gray-600" />
+        <Bell className="w-5 h-5 text-gray-600 dark:text-slate-400" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center leading-none">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -33,8 +33,8 @@ export default function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border z-20 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl shadow-xl border dark:border-slate-700 z-20 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b dark:border-slate-700">
               <span className="font-semibold text-sm">Notifications</span>
               {unreadCount > 0 && (
                 <button
@@ -46,21 +46,21 @@ export default function NotificationBell() {
               )}
             </div>
 
-            <div className="max-h-80 overflow-y-auto divide-y">
+            <div className="max-h-80 overflow-y-auto divide-y dark:divide-slate-700">
               {items.length === 0 ? (
-                <div className="px-4 py-8 text-center text-sm text-gray-400">
+                <div className="px-4 py-8 text-center text-sm text-gray-400 dark:text-slate-500">
                   No notifications
                 </div>
               ) : (
                 items.slice(0, 20).map((n) => (
                   <div
                     key={n._id}
-                    className={`px-4 py-3 text-sm ${!n.isRead ? 'bg-dopa-light' : ''}`}
+                    className={`px-4 py-3 text-sm ${!n.isRead ? 'bg-dopa-light dark:bg-slate-700/50' : ''}`}
                   >
-                    <p className={`${!n.isRead ? 'font-medium' : 'text-gray-600'}`}>
+                    <p className={`${!n.isRead ? 'font-medium' : 'text-gray-600 dark:text-slate-400'}`}>
                       {n.message}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
                       {formatRelativeTime(n.createdAt)}
                     </p>
                   </div>

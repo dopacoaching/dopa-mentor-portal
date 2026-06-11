@@ -38,7 +38,7 @@ export default function AdminDashboard() {
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-28 rounded-xl bg-gray-100 animate-pulse" />
+            <div key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-slate-800 animate-pulse" />
           ))}
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Admin Dashboard</h1>
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" onClick={() => router.push('/admin/directives')}>
             <Plus className="w-4 h-4 mr-1" /> Push Directive
@@ -93,14 +93,14 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {!data?.missedToday.length ? (
-              <p className="text-sm text-gray-400 py-4 text-center">No missed tasks today</p>
+              <p className="text-sm text-gray-400 dark:text-slate-500 py-4 text-center">No missed tasks today</p>
             ) : (
               <div className="space-y-2">
                 {data.missedToday.map((m, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b last:border-0 text-sm">
+                  <div key={i} className="flex items-center justify-between py-2 border-b dark:border-slate-700 last:border-0 text-sm">
                     <div>
                       <p className="font-medium">{m.mentorName}</p>
-                      <p className="text-xs text-gray-400">{m.campus} · {m.batchId}</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{m.campus} · {m.batchId}</p>
                     </div>
                     <Badge variant="destructive">{9 - m.tasksCompleted} missed</Badge>
                   </div>
@@ -118,14 +118,14 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {!data?.pendingVerificationList.length ? (
-              <p className="text-sm text-gray-400 py-4 text-center">All caught up!</p>
+              <p className="text-sm text-gray-400 dark:text-slate-500 py-4 text-center">All caught up!</p>
             ) : (
               <div className="space-y-2">
                 {data.pendingVerificationList.slice(0, 8).map((v, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b last:border-0 text-sm">
+                  <div key={i} className="flex items-center justify-between py-2 border-b dark:border-slate-700 last:border-0 text-sm">
                     <div>
                       <p className="font-medium">{v.mentorName}</p>
-                      <p className="text-xs text-gray-400">{formatDate(v.date)} · {v.batchId}</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{formatDate(v.date)} · {v.batchId}</p>
                     </div>
                     <Badge variant={v.hoursSince > 24 ? 'destructive' : 'warning'}>
                       {v.hoursSince}h ago
@@ -147,14 +147,14 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {!data?.upcomingVisits.length ? (
-              <p className="text-sm text-gray-400 py-4 text-center">No visits scheduled</p>
+              <p className="text-sm text-gray-400 dark:text-slate-500 py-4 text-center">No visits scheduled</p>
             ) : (
               <div className="space-y-2">
                 {data.upcomingVisits.map((v, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b last:border-0 text-sm">
+                  <div key={i} className="flex items-center justify-between py-2 border-b dark:border-slate-700 last:border-0 text-sm">
                     <div>
                       <p className="font-medium">{v.mentorName}</p>
-                      <p className="text-xs text-gray-400">{v.campus}</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{v.campus}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-medium">{formatDate(v.visitDate)}</p>
@@ -175,7 +175,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {!data?.doubtSummary ? (
-              <p className="text-sm text-gray-400">No data</p>
+              <p className="text-sm text-gray-400 dark:text-slate-500">No data</p>
             ) : (
               <div className="space-y-3">
                 {[
@@ -187,10 +187,10 @@ export default function AdminDashboard() {
                 ].map((s) => (
                   <div key={s.label}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">{s.label}</span>
+                      <span className="text-gray-600 dark:text-slate-400">{s.label}</span>
                       <span className="font-medium">{s.value.toLocaleString()}</span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className={`h-full ${s.color} rounded-full transition-all`}
                         style={{ width: `${Math.min(100, data.doubtSummary.total > 0 ? (s.value / data.doubtSummary.total) * 100 : 0)}%` }}
@@ -198,7 +198,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
-                <div className="pt-2 border-t text-sm font-semibold flex justify-between">
+                <div className="pt-2 border-t dark:border-slate-700 text-sm font-semibold flex justify-between">
                   <span>Total</span>
                   <span>{data.doubtSummary.total.toLocaleString()}</span>
                 </div>

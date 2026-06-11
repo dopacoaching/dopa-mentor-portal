@@ -66,16 +66,16 @@ export default function VerifyTasksPage() {
     const completed = log.tasks.filter((t) => t.completed).length
     const hoursSince = Math.round((Date.now() - new Date(log.createdAt).getTime()) / 3600000)
     return (
-      <div className="border rounded-xl overflow-hidden">
+      <div className="border dark:border-slate-700 rounded-xl overflow-hidden">
         <div
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50"
           onClick={() => setExpanded(isOpen ? null : log._id)}
         >
           <div className="flex items-center gap-3">
-            {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 dark:text-slate-500" /> : <ChevronDown className="w-4 h-4 text-gray-400 dark:text-slate-500" />}
             <div>
               <p className="font-medium text-sm">{log.mentorId?.name ?? 'Unknown'}</p>
-              <p className="text-xs text-gray-400">{formatDate(log.date)} · Batch: {log.batchId} · {completed}/9 done</p>
+              <p className="text-xs text-gray-400 dark:text-slate-500">{formatDate(log.date)} · Batch: {log.batchId} · {completed}/9 done</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -86,20 +86,20 @@ export default function VerifyTasksPage() {
           </div>
         </div>
         {isOpen && (
-          <div className="border-t px-4 pb-4 pt-3 space-y-2">
+          <div className="border-t dark:border-slate-700 px-4 pb-4 pt-3 space-y-2">
             {log.tasks.map((t) => (
               <div key={t.taskKey} className="flex items-start gap-2.5 text-sm">
                 {t.completed
                   ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                   : <Circle className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5" />}
                 <div>
-                  <span className={t.completed ? 'text-gray-800' : 'text-gray-400'}>{t.taskName}</span>
-                  {t.note && <p className="text-xs text-gray-500 mt-0.5">{t.note}</p>}
+                  <span className={t.completed ? 'text-gray-800 dark:text-slate-200' : 'text-gray-400 dark:text-slate-500'}>{t.taskName}</span>
+                  {t.note && <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t.note}</p>}
                 </div>
               </div>
             ))}
             {log.verificationNote && (
-              <div className="mt-2 p-2.5 bg-orange-50 rounded text-xs text-orange-700">
+              <div className="mt-2 p-2.5 bg-orange-50 dark:bg-orange-900/20 rounded text-xs text-orange-700 dark:text-orange-300">
                 <strong>Note:</strong> {log.verificationNote}
               </div>
             )}
@@ -143,9 +143,9 @@ export default function VerifyTasksPage() {
 
         <TabsContent value="pending" className="mt-4 space-y-3">
           {loading ? (
-            [...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-gray-100 animate-pulse" />)
+            [...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-gray-100 dark:bg-slate-800 animate-pulse" />)
           ) : pending.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">All caught up — no pending verifications!</div>
+            <div className="text-center py-12 text-gray-400 dark:text-slate-500">All caught up — no pending verifications!</div>
           ) : (
             pending.map((log) => <LogCard key={log._id} log={log} showActions />)
           )}
@@ -153,13 +153,13 @@ export default function VerifyTasksPage() {
 
         <TabsContent value="verified" className="mt-4 space-y-3">
           {verified.length === 0
-            ? <div className="text-center py-12 text-gray-400">No verified logs this month</div>
+            ? <div className="text-center py-12 text-gray-400 dark:text-slate-500">No verified logs this month</div>
             : verified.map((log) => <LogCard key={log._id} log={log} />)}
         </TabsContent>
 
         <TabsContent value="flagged" className="mt-4 space-y-3">
           {flagged.length === 0
-            ? <div className="text-center py-12 text-gray-400">No flagged logs this month</div>
+            ? <div className="text-center py-12 text-gray-400 dark:text-slate-500">No flagged logs this month</div>
             : flagged.map((log) => <LogCard key={log._id} log={log} />)}
         </TabsContent>
       </Tabs>
@@ -168,7 +168,7 @@ export default function VerifyTasksPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Flag Task Log</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm text-gray-600">Please provide a reason for flagging this submission:</p>
+            <p className="text-sm text-gray-600 dark:text-slate-400">Please provide a reason for flagging this submission:</p>
             <Textarea
               value={flagNote}
               onChange={(e) => setFlagNote(e.target.value)}

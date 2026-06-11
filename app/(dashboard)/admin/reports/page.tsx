@@ -53,8 +53,8 @@ export default function AdminReportsPage() {
     <div className="space-y-5">
       <h1 className="text-2xl font-bold">Reports</h1>
 
-      <div className="bg-white rounded-xl border p-4">
-        <p className="text-sm font-semibold text-gray-700 mb-3">Global Filters</p>
+      <div className="bg-white dark:bg-slate-900 rounded-xl border dark:border-slate-700 p-4">
+        <p className="text-sm font-semibold text-gray-700 dark:text-slate-300 mb-3">Global Filters</p>
         <div className="flex flex-wrap gap-3 items-end">
           <div className="space-y-1">
             <Label className="text-xs">Month</Label>
@@ -90,12 +90,12 @@ export default function AdminReportsPage() {
           <Card key={report.type}>
             <CardContent className="pt-5 pb-5">
               <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-dopa-light flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-dopa-light dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
                   <BarChart2 className="w-4 h-4 text-dopa-green" />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-sm">{report.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{report.description}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{report.description}</p>
                   <Button
                     size="sm"
                     variant="outline"

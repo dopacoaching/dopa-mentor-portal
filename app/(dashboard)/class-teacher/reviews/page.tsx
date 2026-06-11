@@ -51,7 +51,7 @@ export default function CTReviewsPage() {
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} type="button" onClick={() => onChange(n)}
-            className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${value >= n ? 'bg-dopa-green text-white' : 'bg-gray-100 text-gray-500'}`}>
+            className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${value >= n ? 'bg-dopa-green text-white' : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400'}`}>
             {n}
           </button>
         ))}
@@ -63,13 +63,13 @@ export default function CTReviewsPage() {
     <div className="space-y-5 max-w-3xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold">CT Visit Reviews</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Confidential — not visible to mentors</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Confidential — not visible to mentors</p>
       </div>
 
       {loading ? (
-        <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+        <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />)}</div>
       ) : visits.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">No visits awaiting review</div>
+        <div className="text-center py-16 text-gray-400 dark:text-slate-500">No visits awaiting review</div>
       ) : (
         <div className="space-y-3">
           {visits.map((visit) => (
@@ -77,7 +77,7 @@ export default function CTReviewsPage() {
               <CardContent className="pt-4 pb-4 flex items-center justify-between">
                 <div>
                   <p className="font-medium">{visit.mentorId?.name ?? 'Unknown'}</p>
-                  <p className="text-sm text-gray-500">{visit.campus} · {formatDate(visit.visitDate)}</p>
+                  <p className="text-sm text-gray-500 dark:text-slate-400">{visit.campus} · {formatDate(visit.visitDate)}</p>
                   <Badge variant="warning" className="mt-1.5">Review Pending</Badge>
                 </div>
                 <Button size="sm" onClick={() => { setReviewDialog({ visit, open: true }); setForm({ wasPunctual: true, interactionQuality: 3, interactionComments: '', directiveCovered: 'yes', overallEffectiveness: 3, observations: '', recommendedAction: 'none' }) }}>
@@ -93,7 +93,7 @@ export default function CTReviewsPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>CT Visit Review</DialogTitle>
-            <p className="text-xs text-gray-500">This review is confidential and not visible to the mentor.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">This review is confidential and not visible to the mentor.</p>
           </DialogHeader>
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
             <div className="flex items-center gap-3">

@@ -199,13 +199,13 @@ export default function UsersPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+        <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-14 bg-gray-100 dark:bg-slate-800 rounded-lg animate-pulse" />)}</div>
       ) : (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border dark:border-slate-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <tr className="border-b dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Username</th>
                   <th className="px-4 py-3">Role</th>
@@ -215,25 +215,25 @@ export default function UsersPage() {
                   <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y dark:divide-slate-700">
                 {users.map((u) => (
-                  <tr key={u._id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-4 py-3 font-medium">{u.name}</td>
-                    <td className="px-4 py-3 text-gray-500">{u.username}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-slate-400">{u.username}</td>
                     <td className="px-4 py-3">
                       <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>{roleLabel(u.role)}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 capitalize">{u.region ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-500">{u.campus ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-slate-400 capitalize">{u.region ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-slate-400">{u.campus ?? '—'}</td>
                     <td className="px-4 py-3">
                       <Badge variant={u.isActive ? 'success' : 'destructive'}>{u.isActive ? 'Active' : 'Inactive'}</Badge>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => setEditUser(u)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700" title="Edit">
+                        <button onClick={() => setEditUser(u)} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200" title="Edit">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => toggleActive(u)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700" title={u.isActive ? 'Deactivate' : 'Reactivate'}>
+                        <button onClick={() => toggleActive(u)} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200" title={u.isActive ? 'Deactivate' : 'Reactivate'}>
                           {u.isActive ? <ToggleRight className="w-3.5 h-3.5 text-green-600" /> : <ToggleLeft className="w-3.5 h-3.5 text-gray-400" />}
                         </button>
                       </div>
@@ -243,7 +243,7 @@ export default function UsersPage() {
               </tbody>
             </table>
             {users.length === 0 && (
-              <div className="py-12 text-center text-gray-400 text-sm">No users found.</div>
+              <div className="py-12 text-center text-gray-400 dark:text-slate-500 text-sm">No users found.</div>
             )}
           </div>
         </div>

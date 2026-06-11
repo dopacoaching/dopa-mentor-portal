@@ -54,11 +54,11 @@ export default function AdminVisitsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+              <tr className="bg-gray-50 dark:bg-slate-800 border-b dark:border-slate-700 text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide">
                 <th className="text-left px-4 py-3">Mentor</th>
                 <th className="text-left px-4 py-3">Campus</th>
                 <th className="text-left px-4 py-3">Date</th>
@@ -69,19 +69,19 @@ export default function AdminVisitsPage() {
                 <th className="text-center px-4 py-3">Payment</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y dark:divide-slate-700">
               {loading ? (
-                [...Array(5)].map((_, i) => <tr key={i}><td colSpan={8} className="px-4 py-3"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td></tr>)
+                [...Array(5)].map((_, i) => <tr key={i}><td colSpan={8} className="px-4 py-3"><div className="h-4 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" /></td></tr>)
               ) : visits.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-12 text-gray-400">
+                <tr><td colSpan={8} className="text-center py-12 text-gray-400 dark:text-slate-500">
                   <MapPin className="w-8 h-8 mx-auto mb-2 opacity-30" />No visits found
                 </td></tr>
               ) : (
                 visits.map((v) => (
-                  <tr key={v._id} className="hover:bg-gray-50">
+                  <tr key={v._id} className="hover:bg-gray-50 dark:hover:bg-slate-800/50">
                     <td className="px-4 py-3 font-medium">{v.mentorId?.name ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{v.campus}</td>
-                    <td className="px-4 py-3 text-gray-600">{formatDate(v.visitDate)}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-400">{v.campus}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-400">{formatDate(v.visitDate)}</td>
                     <td className="px-4 py-3"><Badge variant="secondary">{v.visitType === 'campus_group' ? 'Group' : v.visitType === 'merged_group' ? 'Merged' : '1-on-1'}</Badge></td>
                     <td className="px-4 py-3">{STATUS_BADGE[v.status]}</td>
                     <td className="px-4 py-3 text-center">{v.mentorReportSubmitted ? '✅' : '—'}</td>
