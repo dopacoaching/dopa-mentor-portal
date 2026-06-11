@@ -60,6 +60,11 @@ export default function VerifyTasksPage() {
   const pending = logs.filter((l) => l.status === 'submitted')
   const verified = logs.filter((l) => l.status === 'verified')
   const flagged = logs.filter((l) => l.status === 'flagged')
+  const allSorted = [...logs].sort((a, b) => {
+    if (a.status === 'submitted' && b.status !== 'submitted') return -1
+    if (a.status !== 'submitted' && b.status === 'submitted') return 1
+    return new Date(b.date).getTime() - new Date(a.date).getTime()
+  })
 
   function LogCard({ log, showActions }: { log: PopulatedLog; showActions?: boolean }) {
     const isOpen = expanded === log._id
@@ -79,7 +84,7 @@ export default function VerifyTasksPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {showActions && <Badge variant="warning">{hoursSince}h ago</Badge>}
+            {log.status === 'submitted' && <Badge variant="warning">{hoursSince}h ago</Badge>}
             {log.status === 'verified' && <Badge variant="success">Verified</Badge>}
             {log.status === 'flagged' && <Badge variant="destructive">Flagged</Badge>}
             {log.status === 'auto_closed' && <Badge variant="secondary">Auto-closed</Badge>}
@@ -134,12 +139,23 @@ export default function VerifyTasksPage() {
     <div className="space-y-5 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold">Task Verification</h1>
 
-      <Tabs defaultValue="pending">
+      <Tabs defaultValue="all">
         <TabsList>
+          <TabsTrigger value="all">All <Badge variant="secondary" className="ml-1.5">{logs.length}</Badge></TabsTrigger>
           <TabsTrigger value="pending">Pending <Badge variant="warning" className="ml-1.5">{pending.length}</Badge></TabsTrigger>
           <TabsTrigger value="verified">Verified <Badge variant="success" className="ml-1.5">{verified.length}</Badge></TabsTrigger>
           <TabsTrigger value="flagged">Flagged <Badge variant="destructive" className="ml-1.5">{flagged.length}</Badge></TabsTrigger>
         </TabsList>
+
+        <TabsContent value="all" className="mt-4 space-y-3">
+          {loading ? (
+            [...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-gray-100 dark:bg-slate-800 animate-pulse" />)
+          ) : allSorted.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 dark:text-slate-500">No submissions this month</div>
+          ) : (
+            allSorted.map((log) => <LogCard key={log._id} log={log} showActions />)
+          )}
+        </TabsContent>
 
         <TabsContent value="pending" className="mt-4 space-y-3">
           {loading ? (
