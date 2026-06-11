@@ -44,7 +44,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg overflow-hidden">
           <div className="px-8 pt-8 pb-4 flex justify-center">
-            <Image src="/logo.png" alt="DOPA Mentor Portal" width={180} height={64} priority className="object-contain" />
+            <Image src="/logo.png" alt="DOPA Mentor Portal" width={80} height={80} priority className="object-contain" />
           </div>
 
           <form onSubmit={handleSubmit} className="px-8 py-8 space-y-5">
