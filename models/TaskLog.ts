@@ -4,6 +4,7 @@ export interface ITaskItem {
   taskKey: string
   taskName: string
   completed: boolean
+  omitted: boolean
   note: string | null
   completedAt: Date | null
 }
@@ -27,6 +28,7 @@ const taskItemSchema = new Schema<ITaskItem>(
     taskKey: { type: String, required: true },
     taskName: { type: String, required: true },
     completed: { type: Boolean, default: false },
+    omitted: { type: Boolean, default: false },
     note: { type: String, default: null },
     completedAt: { type: Date, default: null },
   },

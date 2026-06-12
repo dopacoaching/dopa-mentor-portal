@@ -70,7 +70,7 @@ export default function ClassTeacherDashboard() {
                   <div key={log._id} className="flex items-center justify-between text-sm py-1.5 border-b dark:border-slate-700 last:border-0">
                     <div>
                       <p className="font-medium">{log.mentorId?.name ?? 'Unknown'}</p>
-                      <p className="text-xs text-gray-400 dark:text-slate-500">{formatDate(log.date)} · {log.tasks.filter((t) => t.completed).length}/9</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{formatDate(log.date)} · {log.tasks.filter((t) => t.completed).length}/{log.tasks.filter((t) => !t.omitted).length}</p>
                     </div>
                     <Badge variant={log.status === 'submitted' ? 'warning' : log.status === 'verified' ? 'success' : 'destructive'}>
                       {log.status}

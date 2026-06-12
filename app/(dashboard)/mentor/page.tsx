@@ -47,6 +47,7 @@ export default function MentorDashboard() {
   }
 
   const todayCompleted = taskLog?.tasks.filter((t) => t.completed).length ?? 0
+  const todayActive = taskLog?.tasks.filter((t) => !t.omitted).length ?? 9
   const progressPct = (doubtSummary.total / 300) * 100
   const pendingVisit = visits.find((v) => v.status === 'scheduled' || v.status === 'confirmed')
 
@@ -69,9 +70,9 @@ export default function MentorDashboard() {
       <div className="grid grid-cols-2 gap-4">
         <StatCard
           title="Today's Tasks"
-          value={`${todayCompleted}/9`}
+          value={`${todayCompleted}/${todayActive}`}
           subtitle={taskLog ? `Status: ${taskLog.status}` : 'Not submitted yet'}
-          color={todayCompleted === 9 ? 'green' : todayCompleted > 0 ? 'yellow' : 'red'}
+          color={todayCompleted === todayActive ? 'green' : todayCompleted > 0 ? 'yellow' : 'red'}
           icon={<CheckSquare className="w-7 h-7" />}
         />
         <StatCard

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react'
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, ClipboardList, MinusCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatDate } from '@/lib/utils'
@@ -85,6 +85,7 @@ export default function CTTasksPage() {
           {filtered.map((log) => {
             const isOpen = expanded === log._id
             const completed = log.tasks.filter((t) => t.completed).length
+            const active = log.tasks.filter((t) => !t.omitted).length
             const mentor = log.mentorId
             return (
               <div key={log._id} className="border dark:border-slate-700 rounded-xl overflow-hidden">
@@ -99,7 +100,7 @@ export default function CTTasksPage() {
                     <div>
                       <p className="font-medium text-sm">{mentor?.name ?? 'Unknown'}</p>
                       <p className="text-xs text-gray-400 dark:text-slate-500">
-                        {formatDate(log.date)} · Batch: {log.batchId} · {completed}/9 done
+                        {formatDate(log.date)} · Batch: {log.batchId} · {completed}/{active} done
                       </p>
                     </div>
                   </div>
@@ -119,14 +120,17 @@ export default function CTTasksPage() {
                 {isOpen && (
                   <div className="border-t dark:border-slate-700 px-4 pb-4 pt-3 space-y-2">
                     {log.tasks.map((t) => (
-                      <div key={t.taskKey} className="flex items-start gap-2.5 text-sm">
-                        {t.completed
-                          ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                          : <Circle className="w-4 h-4 text-gray-300 dark:text-slate-600 flex-shrink-0 mt-0.5" />}
+                      <div key={t.taskKey} className={`flex items-start gap-2.5 text-sm ${t.omitted ? 'opacity-50' : ''}`}>
+                        {t.omitted
+                          ? <MinusCircle className="w-4 h-4 text-gray-300 dark:text-slate-600 flex-shrink-0 mt-0.5" />
+                          : t.completed
+                            ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                            : <Circle className="w-4 h-4 text-gray-300 dark:text-slate-600 flex-shrink-0 mt-0.5" />}
                         <div>
-                          <span className={t.completed ? 'text-gray-800 dark:text-slate-200' : 'text-gray-400 dark:text-slate-500'}>
+                          <span className={t.omitted ? 'line-through text-gray-400 dark:text-slate-500' : t.completed ? 'text-gray-800 dark:text-slate-200' : 'text-gray-400 dark:text-slate-500'}>
                             {t.taskName}
                           </span>
+                          {t.omitted && <span className="ml-1.5 text-xs text-gray-400 dark:text-slate-500">(N/A)</span>}
                           {t.note && <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t.note}</p>}
                         </div>
                       </div>

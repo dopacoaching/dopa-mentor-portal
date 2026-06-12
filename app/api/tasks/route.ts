@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
     taskKey: key,
     taskName: TASK_NAMES[key],
     completed: false,
+    omitted: false,
     note: null,
     completedAt: null,
   }))
@@ -92,11 +93,13 @@ export async function POST(request: NextRequest) {
   const mergedTasks = defaultTasks.map((dt) => {
     const override = tasks?.find((t: { taskKey: string }) => t.taskKey === dt.taskKey)
     if (override) {
+      const omitted = override.omitted ?? false
       return {
         ...dt,
-        completed: override.completed ?? false,
+        completed: omitted ? false : (override.completed ?? false),
+        omitted,
         note: override.note ?? null,
-        completedAt: override.completed ? new Date() : null,
+        completedAt: !omitted && override.completed ? new Date() : null,
       }
     }
     return dt
@@ -121,7 +124,8 @@ export async function POST(request: NextRequest) {
   })
 
   const completed = mergedTasks.filter((t) => t.completed).length
-  logAudit({ user, action: 'task.submit', targetType: 'TaskLog', targetId: log._id.toString(), details: { batchId: resolvedBatchId, completed }, request })
+  const omitted = mergedTasks.filter((t) => t.omitted).length
+  logAudit({ user, action: 'task.submit', targetType: 'TaskLog', targetId: log._id.toString(), details: { batchId: resolvedBatchId, completed, omitted }, request })
 
   return NextResponse.json({ log }, { status: 201 })
 }

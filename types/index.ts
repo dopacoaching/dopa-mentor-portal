@@ -58,6 +58,7 @@ export interface TaskItem {
   taskKey: string
   taskName: string
   completed: boolean
+  omitted: boolean
   note: string | null
   completedAt: string | null
 }

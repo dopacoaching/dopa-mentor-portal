@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { CheckCircle2, Circle, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
+import { CheckCircle2, Circle, ChevronLeft, ChevronRight, Clock, MinusCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +12,8 @@ import { useAppSelector } from '@/store/hooks'
 import { TASK_KEYS, TASK_NAMES, TASK_DEADLINES } from '@/types'
 import type { ITaskLog, TaskItem } from '@/types'
 import { formatDate } from '@/lib/utils'
+
+type TaskState = { completed: boolean; omitted: boolean; note: string }
 
 function statusBadge(status: string) {
   switch (status) {
@@ -25,8 +27,9 @@ function statusBadge(status: string) {
 function getDayColor(log: ITaskLog | undefined, date: Date): string {
   if (date > new Date()) return 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500'
   if (!log) return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-  const completed = log.tasks.filter((t) => t.completed).length
-  if (completed === 9) return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+  const active = log.tasks.filter((t) => !t.omitted)
+  const completed = active.filter((t) => t.completed).length
+  if (active.length === 0 || completed === active.length) return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
   if (completed > 0) return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
   return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
 }
@@ -35,7 +38,7 @@ export default function MentorTasksPage() {
   const { userId } = useAppSelector((s) => s.auth)
   const [todayLog, setTodayLog] = useState<ITaskLog | null>(null)
   const [monthLogs, setMonthLogs] = useState<ITaskLog[]>([])
-  const [tasks, setTasks] = useState<Record<string, { completed: boolean; note: string }>>({})
+  const [tasks, setTasks] = useState<Record<string, TaskState>>({})
   const [saving, setSaving] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedLog, setSelectedLog] = useState<ITaskLog | null>(null)
@@ -44,10 +47,10 @@ export default function MentorTasksPage() {
   today.setHours(0, 0, 0, 0)
 
   const initTasks = useCallback((log: ITaskLog | null) => {
-    const init: Record<string, { completed: boolean; note: string }> = {}
+    const init: Record<string, TaskState> = {}
     TASK_KEYS.forEach((key) => {
       const t = log?.tasks.find((x) => x.taskKey === key)
-      init[key] = { completed: t?.completed ?? false, note: t?.note ?? '' }
+      init[key] = { completed: t?.completed ?? false, omitted: t?.omitted ?? false, note: t?.note ?? '' }
     })
     setTasks(init)
   }, [])
@@ -80,7 +83,20 @@ export default function MentorTasksPage() {
 
   function toggleTask(key: string) {
     if (todayLog && todayLog.status !== 'submitted') return
-    setTasks((prev) => ({ ...prev, [key]: { ...prev[key], completed: !prev[key]?.completed } }))
+    setTasks((prev) => {
+      const cur = prev[key]
+      if (cur.omitted) return prev
+      return { ...prev, [key]: { ...cur, completed: !cur.completed } }
+    })
+  }
+
+  function toggleOmit(key: string) {
+    if (todayLog && todayLog.status !== 'submitted') return
+    setTasks((prev) => {
+      const cur = prev[key]
+      const nowOmitted = !cur.omitted
+      return { ...prev, [key]: { ...cur, omitted: nowOmitted, completed: nowOmitted ? false : cur.completed } }
+    })
   }
 
   async function handleSave() {
@@ -89,6 +105,7 @@ export default function MentorTasksPage() {
       const taskPayload = TASK_KEYS.map((key) => ({
         taskKey: key,
         completed: tasks[key]?.completed ?? false,
+        omitted: tasks[key]?.omitted ?? false,
         note: tasks[key]?.note || null,
       }))
       const r = await fetch('/api/tasks', {
@@ -107,7 +124,10 @@ export default function MentorTasksPage() {
   }
 
   const isSubmitted = !!todayLog && todayLog.status !== 'submitted'
-  const completedCount = Object.values(tasks).filter((t) => t.completed).length
+  const activeTasks = Object.values(tasks).filter((t) => !t.omitted)
+  const completedCount = activeTasks.filter((t) => t.completed).length
+  const omittedCount = Object.values(tasks).filter((t) => t.omitted).length
+  const totalActive = 9 - omittedCount
 
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate()
   const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
@@ -132,40 +152,51 @@ export default function MentorTasksPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Today's Checklist</CardTitle>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 dark:text-slate-400">{completedCount}/9 completed</span>
+              <span className="text-sm text-gray-500 dark:text-slate-400">
+                {completedCount}/{totalActive} done
+                {omittedCount > 0 && <span className="ml-1 text-gray-400 dark:text-slate-500">· {omittedCount} skipped</span>}
+              </span>
               {todayLog && statusBadge(todayLog.status)}
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
           {TASK_KEYS.map((key) => {
-            const t = tasks[key] ?? { completed: false, note: '' }
+            const t = tasks[key] ?? { completed: false, omitted: false, note: '' }
             const deadline = TASK_DEADLINES[key]
             const deadlinePassed = deadline === '9:00 AM' ? new Date().getHours() >= 9 : new Date().getHours() >= 20
+
+            let rowBg = 'bg-white dark:bg-slate-800/50 dark:border-slate-700'
+            if (t.omitted) rowBg = 'bg-gray-50 dark:bg-slate-800/30 border-dashed border-gray-200 dark:border-slate-700 opacity-60'
+            else if (t.completed) rowBg = 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+
             return (
-              <div key={key} className={`border rounded-xl p-3 transition-colors ${t.completed ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-white dark:bg-slate-800/50 dark:border-slate-700'}`}>
+              <div key={key} className={`border rounded-xl p-3 transition-colors ${rowBg}`}>
                 <div className="flex items-start gap-3">
                   <button
                     onClick={() => toggleTask(key)}
-                    disabled={isSubmitted}
-                    className="mt-0.5 flex-shrink-0 disabled:opacity-50"
+                    disabled={isSubmitted || t.omitted}
+                    className="mt-0.5 flex-shrink-0 disabled:opacity-40"
                   >
-                    {t.completed
-                      ? <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      : <Circle className="w-5 h-5 text-gray-300" />}
+                    {t.omitted
+                      ? <MinusCircle className="w-5 h-5 text-gray-300 dark:text-slate-600" />
+                      : t.completed
+                        ? <CheckCircle2 className="w-5 h-5 text-green-600" />
+                        : <Circle className="w-5 h-5 text-gray-300" />}
                   </button>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-sm font-medium ${t.completed ? 'text-green-800 dark:text-green-200' : 'text-gray-800 dark:text-slate-200'}`}>
+                      <span className={`text-sm font-medium ${t.omitted ? 'line-through text-gray-400 dark:text-slate-500' : t.completed ? 'text-green-800 dark:text-green-200' : 'text-gray-800 dark:text-slate-200'}`}>
                         {TASK_NAMES[key]}
                       </span>
-                      {deadline && (
+                      {deadline && !t.omitted && (
                         <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ${deadlinePassed && !t.completed ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400'}`}>
                           <Clock className="w-3 h-3" /> {deadline}
                         </span>
                       )}
+                      {t.omitted && <Badge variant="secondary" className="text-xs px-1.5 py-0">N/A</Badge>}
                     </div>
-                    {t.completed && !isSubmitted && (
+                    {t.completed && !isSubmitted && !t.omitted && (
                       <Textarea
                         value={t.note}
                         onChange={(e) => setTasks((prev) => ({ ...prev, [key]: { ...prev[key], note: e.target.value } }))}
@@ -177,6 +208,15 @@ export default function MentorTasksPage() {
                       <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">{t.note}</p>
                     )}
                   </div>
+                  {!isSubmitted && (
+                    <button
+                      onClick={() => toggleOmit(key)}
+                      title={t.omitted ? 'Un-skip this task' : 'Skip — not applicable today'}
+                      className={`flex-shrink-0 mt-0.5 px-2 py-0.5 rounded text-xs font-medium transition-colors ${t.omitted ? 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-300 dark:hover:bg-slate-600' : 'text-gray-300 dark:text-slate-600 hover:text-gray-500 dark:hover:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                    >
+                      {t.omitted ? 'Undo' : 'N/A'}
+                    </button>
+                  )}
                 </div>
               </div>
             )
@@ -265,16 +305,22 @@ export default function MentorTasksPage() {
               <div className="flex items-center gap-2 mb-3">
                 {statusBadge(selectedLog.status)}
                 <span className="text-xs text-gray-500 dark:text-slate-400">
-                  {selectedLog.tasks.filter((t) => t.completed).length}/9 completed
+                  {selectedLog.tasks.filter((t) => t.completed).length}/{selectedLog.tasks.filter((t: TaskItem) => !t.omitted).length} completed
+                  {selectedLog.tasks.filter((t: TaskItem) => t.omitted).length > 0 && (
+                    <span className="ml-1">· {selectedLog.tasks.filter((t: TaskItem) => t.omitted).length} skipped</span>
+                  )}
                 </span>
               </div>
               {selectedLog.tasks.map((t) => (
-                <div key={t.taskKey} className={`flex items-start gap-2.5 p-2.5 rounded-lg ${t.completed ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-slate-800'}`}>
-                  {t.completed
-                    ? <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    : <Circle className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5" />}
+                <div key={t.taskKey} className={`flex items-start gap-2.5 p-2.5 rounded-lg ${t.omitted ? 'bg-gray-50 dark:bg-slate-800 opacity-50' : t.completed ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-slate-800'}`}>
+                  {t.omitted
+                    ? <MinusCircle className="w-4 h-4 text-gray-300 dark:text-slate-600 flex-shrink-0 mt-0.5" />
+                    : t.completed
+                      ? <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                      : <Circle className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5" />}
                   <div>
-                    <p className="text-sm font-medium">{t.taskName}</p>
+                    <p className={`text-sm font-medium ${t.omitted ? 'line-through text-gray-400' : ''}`}>{t.taskName}</p>
+                    {t.omitted && <p className="text-xs text-gray-400 dark:text-slate-500">Not applicable</p>}
                     {t.note && <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t.note}</p>}
                   </div>
                 </div>
