@@ -14,8 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { roleLabel } from '@/lib/utils'
 import type { IUser } from '@/types'
 
-const REGIONS = ['calicut', 'kottakkal', 'thrissur', 'ig']
-const REGIONS_LABELS: Record<string, string> = { calicut: 'Calicut', kottakkal: 'Kottakkal', thrissur: 'Thrissur', ig: 'Integrated School (IG)' }
+const REGIONS = ['Calicut', 'Kottakkal', 'Thrissur', 'IG']
+const REGIONS_LABELS: Record<string, string> = { Calicut: 'Calicut', Kottakkal: 'Kottakkal', Thrissur: 'Thrissur', IG: 'Integrated School (IG)' }
 const ROLES = ['admin', 'class_teacher', 'mentor', 'regional_head']
 
 interface CampusBatch { batchId: string; batchName: string; batchType: string }

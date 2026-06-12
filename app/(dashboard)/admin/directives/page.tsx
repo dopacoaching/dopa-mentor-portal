@@ -14,8 +14,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/utils'
 import type { IDirective } from '@/types'
 
-const REGIONS = ['calicut', 'kottakkal', 'thrissur', 'ig']
-const REGIONS_LABELS: Record<string, string> = { calicut: 'Calicut', kottakkal: 'Kottakkal', thrissur: 'Thrissur', ig: 'Integrated School (IG)' }
+const REGIONS = ['Calicut', 'Kottakkal', 'Thrissur', 'IG']
+const REGIONS_LABELS: Record<string, string> = { Calicut: 'Calicut', Kottakkal: 'Kottakkal', Thrissur: 'Thrissur', IG: 'Integrated School (IG)' }
 
 export default function AdminDirectivesPage() {
   const [directives, setDirectives] = useState<IDirective[]>([])

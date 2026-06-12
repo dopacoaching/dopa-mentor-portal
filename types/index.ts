@@ -1,6 +1,6 @@
 export type Role = 'admin' | 'class_teacher' | 'mentor' | 'regional_head'
-export type Region = 'calicut' | 'kottakkal' | 'thrissur' | 'ig'
-export type BatchType = 'residential' | 'online' | 'ig'
+export type Region = 'Calicut' | 'Kottakkal' | 'Thrissur' | 'IG'
+export type BatchType = 'residential' | 'online' | 'ig' | 'offline'
 
 export interface AssignedBatch {
   batchId: string

@@ -11,15 +11,16 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 
 const REGIONS = [
-  { value: 'calicut', label: 'Calicut' },
-  { value: 'kottakkal', label: 'Kottakkal' },
-  { value: 'thrissur', label: 'Thrissur' },
-  { value: 'ig', label: 'Integrated School (IG)' },
+  { value: 'Calicut', label: 'Calicut' },
+  { value: 'Kottakkal', label: 'Kottakkal' },
+  { value: 'Thrissur', label: 'Thrissur' },
+  { value: 'IG', label: 'Integrated School (IG)' },
 ]
 
 const BATCH_TYPE_LABELS: Record<string, string> = {
   residential: 'Residential',
   online: 'Online',
+  offline: 'Offline',
   ig: 'Integrated (IG)',
 }
 
@@ -76,6 +77,7 @@ function BatchRows({
               <SelectContent>
                 <SelectItem value="residential">Residential</SelectItem>
                 <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="offline">Offline</SelectItem>
                 <SelectItem value="ig">Integrated (IG)</SelectItem>
               </SelectContent>
             </Select>

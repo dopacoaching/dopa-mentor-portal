@@ -6,11 +6,11 @@ export interface IUserDocument extends Document {
   password: string
   role: 'admin' | 'class_teacher' | 'mentor' | 'regional_head'
   isActive: boolean
-  region: 'calicut' | 'kottakkal' | 'thrissur' | 'ig' | null
+  region: 'Calicut' | 'Kottakkal' | 'Thrissur' | 'IG' | null
   campus: string | null
   assignedBatches: {
     batchId: string
-    batchType: 'residential' | 'online' | 'ig'
+    batchType: 'residential' | 'online' | 'ig' | 'offline'
     batchName: string
   }[]
   assignedMentors: mongoose.Types.ObjectId[]
@@ -22,7 +22,7 @@ export interface IUserDocument extends Document {
 const assignedBatchSchema = new Schema(
   {
     batchId: { type: String, required: true },
-    batchType: { type: String, enum: ['residential', 'online', 'ig'], required: true },
+    batchType: { type: String, enum: ['residential', 'online', 'ig', 'offline'], required: true },
     batchName: { type: String, required: true },
   },
   { _id: false }
@@ -41,7 +41,7 @@ const userSchema = new Schema<IUserDocument>(
     isActive: { type: Boolean, default: true },
     region: {
       type: String,
-      enum: ['calicut', 'kottakkal', 'thrissur', 'ig', null],
+      enum: ['Calicut', 'Kottakkal', 'Thrissur', 'IG', null],
       default: null,
     },
     campus: { type: String, default: null },
