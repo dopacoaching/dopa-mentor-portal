@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { requireRole, isAuthResult } from '@/lib/middleware'
 import Visit from '@/models/Visit'
+import User from '@/models/User'
 import MentorVisitReport from '@/models/MentorVisitReport'
 import Notification from '@/models/Notification'
 import { sendToUser, sendToRole } from '@/lib/sse'
@@ -27,12 +28,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Report already submitted' }, { status: 409 })
   }
 
+  // Look up human-readable batch name from mentor's assignedBatches
+  const mentor = await User.findById(user.userId).select('assignedBatches').lean()
+  const matchedBatch = mentor?.assignedBatches?.find((b) => b.batchId === visit.batchId)
+  const batchName = matchedBatch?.batchName ?? visit.batchId
+
   const report = await MentorVisitReport.create({
     visitId,
     mentorId: user.userId,
     visitDate: visit.visitDate,
     campus: visit.campus,
-    batchName: visit.batchId,
+    batchName,
     visitType: visit.visitType,
     numberOfStudentsMet: numberOfStudentsMet ?? 0,
     discussionTopics: discussionTopics ?? '',

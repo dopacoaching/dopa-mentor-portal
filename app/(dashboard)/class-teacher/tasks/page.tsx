@@ -5,9 +5,10 @@ import { CheckCircle2, Circle, ChevronDown, ChevronUp, ClipboardList } from 'luc
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatDate } from '@/lib/utils'
-import type { ITaskLog, IUser } from '@/types'
+import type { ITaskLog } from '@/types'
 
-type PopulatedLog = Omit<ITaskLog, 'mentorId'> & { mentorId: IUser }
+type MentorRef = { _id: string; name: string; username: string }
+type PopulatedLog = Omit<ITaskLog, 'mentorId'> & { mentorId: MentorRef }
 
 const STATUS_BADGE: Record<string, JSX.Element> = {
   submitted: <Badge variant="warning">Pending</Badge>,
@@ -18,7 +19,6 @@ const STATUS_BADGE: Record<string, JSX.Element> = {
 
 export default function CTTasksPage() {
   const [logs, setLogs] = useState<PopulatedLog[]>([])
-  const [mentors, setMentors] = useState<IUser[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [filterMentor, setFilterMentor] = useState('all')
@@ -30,13 +30,9 @@ export default function CTTasksPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [logsRes, mentorRes] = await Promise.all([
-        fetch(`/api/tasks?month=${month}&year=${year}`),
-        fetch('/api/users?role=mentor'),
-      ])
-      const [logsData, mentorData] = await Promise.all([logsRes.json(), mentorRes.json()])
-      setLogs(logsData.logs ?? [])
-      setMentors(mentorData.users ?? [])
+      const res = await fetch(`/api/tasks?month=${month}&year=${year}`)
+      const data = await res.json()
+      setLogs(data.logs ?? [])
     } finally {
       setLoading(false)
     }
@@ -44,13 +40,12 @@ export default function CTTasksPage() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
+  // Derive unique mentors from populated log data — avoids a separate /api/users call
+  const mentorsWithLogs = [...new Map(logs.map((l) => [l.mentorId._id, l.mentorId])).values()]
+
   const filtered = filterMentor === 'all'
     ? logs
     : logs.filter((l) => l.mentorId._id === filterMentor)
-
-  const mentorsWithLogs = mentors.filter((m) =>
-    logs.some((l) => l.mentorId._id === m._id)
-  )
 
   return (
     <div className="space-y-5 max-w-3xl mx-auto">

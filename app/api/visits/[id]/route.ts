@@ -33,13 +33,25 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   if (!visit) return NextResponse.json({ error: 'Visit not found' }, { status: 404 })
 
   const { user } = authResult
+
+  // Ownership checks
   if (user.role === 'mentor' && visit.mentorId.toString() !== user.userId) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+  if (user.role === 'class_teacher' && visit.classTeacherId.toString() !== user.userId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
+  // Field allow-lists per role — CT cannot touch payment/report flags
   const ADMIN_FIELDS = ['visitDate', 'visitType', 'batchId', 'campus', 'status', 'ctRemark', 'mentorReportSubmitted', 'ctReviewSubmitted', 'countedForPayment']
+  const CT_FIELDS = ['visitDate', 'visitType', 'batchId', 'ctRemark', 'status']
   const MENTOR_FIELDS = ['mentorChangeReason']
-  const allowed = user.role === 'admin' ? ADMIN_FIELDS : user.role === 'class_teacher' ? ADMIN_FIELDS : MENTOR_FIELDS
+
+  const allowed =
+    user.role === 'admin' ? ADMIN_FIELDS :
+    user.role === 'class_teacher' ? CT_FIELDS :
+    MENTOR_FIELDS
+
   const safe = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)))
 
   Object.assign(visit, safe)

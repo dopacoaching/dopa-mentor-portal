@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
   const mentors = await User.find({ role: 'mentor', isActive: true }).select('_id name region')
   const mentorIds = mentors.map((m) => m._id)
 
-  // Batch-fetch all logs for all mentors in last 4 days (1 query instead of N)
   const allLogs = await TaskLog.find({
     mentorId: { $in: mentorIds },
     date: { $gte: cutoff },
@@ -31,6 +30,9 @@ export async function GET(request: NextRequest) {
     last4days.push(d.toDateString())
   }
 
+  // Fetch admins once so we can create stored notifications for them
+  const admins = await User.find({ role: 'admin', isActive: true }).select('_id').lean()
+
   let flagged = 0
   for (const mentor of mentors) {
     const id = mentor._id.toString()
@@ -41,6 +43,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (misses.length >= 3) {
+      // Deduplicate: skip if already notified in last 24h
       const alreadyNotified = await Notification.findOne({
         type: 'consecutive_miss',
         relatedId: mentor._id,
@@ -48,13 +51,19 @@ export async function GET(request: NextRequest) {
       })
       if (!alreadyNotified) {
         const msg = `${mentor.name} has missed tasks for ${misses.length} consecutive days.`
-        const notif = await Notification.create({
-          recipientId: mentor._id,
-          type: 'consecutive_miss',
-          message: msg,
-          relatedId: mentor._id,
-        })
-        sendToRole('admin', { type: 'notification', data: notif.toObject() })
+
+        // Create stored notification for each admin so it appears in their bell
+        await Promise.all(
+          admins.map((admin) =>
+            Notification.create({
+              recipientId: admin._id,
+              type: 'consecutive_miss',
+              message: msg,
+              relatedId: mentor._id,
+            })
+          )
+        )
+        sendToRole('admin', { type: 'notification', data: { type: 'consecutive_miss', message: msg } })
         flagged++
       }
     }

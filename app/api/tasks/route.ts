@@ -22,9 +22,19 @@ export async function GET(request: NextRequest) {
   if (user.role === 'mentor') {
     query.mentorId = user.userId
   } else if (user.role === 'class_teacher') {
-    const me = await User.findById(user.userId).select('assignedMentors campus')
-    query.mentorId = { $in: me?.assignedMentors ?? [] }
+    const me = await User.findById(user.userId).select('assignedMentors campus').lean()
+    if (me?.assignedMentors?.length) {
+      // Explicit assignment takes priority
+      query.mentorId = { $in: me.assignedMentors }
+    } else if (me?.campus) {
+      // Fall back to campus-based: all mentors at the same campus
+      const campusMentors = await User.find({ role: 'mentor', campus: me.campus, isActive: true }).select('_id').lean()
+      query.mentorId = { $in: campusMentors.map((m) => m._id) }
+    } else {
+      query.mentorId = { $in: [] }
+    }
   }
+  // admin / regional_head: no mentorId filter (see all, or handle via separate endpoints)
 
   if (month && year) {
     const start = new Date(Number(year), Number(month) - 1, 1)

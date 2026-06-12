@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import TaskLog from '@/models/TaskLog'
-import User from '@/models/User'
 import Notification from '@/models/Notification'
 import { sendToUser, sendToRole } from '@/lib/sse'
 
@@ -19,7 +18,7 @@ export async function GET(request: NextRequest) {
   const pendingLogs = await TaskLog.find({
     date: { $gte: todayStart, $lte: todayEnd },
     status: 'submitted',
-  }).populate('mentorId', 'name assignedMentors')
+  }).populate('mentorId', 'name')
 
   let closed = 0
   for (const log of pendingLogs) {
@@ -30,17 +29,21 @@ export async function GET(request: NextRequest) {
       await log.save()
       closed++
 
-      const mentor = log.mentorId as unknown as { name: string }
+      const mentor = log.mentorId as unknown as { _id: { toString(): string }; name: string }
 
-      const msg = `${mentor.name ?? 'A mentor'} missed tasks on ${now.toDateString()}. Log auto-closed.`
-      const ctNotif = await Notification.create({
-        recipientId: log.mentorId,
+      // Notify the mentor in second-person
+      const mentorNotif = await Notification.create({
+        recipientId: mentor._id,
         type: 'task_missed',
-        message: msg,
+        message: `You missed completing all tasks on ${now.toDateString()}. Your log has been auto-closed.`,
         relatedId: log._id,
       })
-      sendToRole('class_teacher', { type: 'notification', data: ctNotif.toObject() })
-      sendToRole('admin', { type: 'notification', data: ctNotif.toObject() })
+      sendToUser(mentor._id.toString(), { type: 'notification', data: mentorNotif.toObject() })
+
+      // Broadcast alert to class_teachers and admins via SSE (real-time only, no stored notification)
+      const alertMsg = `${mentor.name} missed tasks on ${now.toDateString()}. Log auto-closed.`
+      sendToRole('class_teacher', { type: 'notification', data: { type: 'task_missed', message: alertMsg } })
+      sendToRole('admin', { type: 'notification', data: { type: 'task_missed', message: alertMsg } })
     }
   }
 

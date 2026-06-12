@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 import { connectDB } from '@/lib/mongodb'
 import { requireRole, isAuthResult } from '@/lib/middleware'
 import TaskLog from '@/models/TaskLog'
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
   if (!log) return NextResponse.json({ error: 'Task log not found' }, { status: 404 })
 
   log.status = action
-  log.verifiedBy = authResult.user.userId as unknown as typeof log.verifiedBy
+  log.verifiedBy = new mongoose.Types.ObjectId(authResult.user.userId)
   log.verificationNote = note || null
   log.verifiedAt = new Date()
   await log.save()
