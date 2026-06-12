@@ -74,7 +74,8 @@ function UserForm({
     }
   }
 
-  const needsRegionCampus = role === 'class_teacher' || role === 'mentor'
+  const needsRegion = role === 'class_teacher' || role === 'mentor' || role === 'regional_head'
+  const needsCampus = role === 'class_teacher' || role === 'mentor'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -103,32 +104,32 @@ function UserForm({
           </Select>
         </div>
       </div>
-      {needsRegionCampus && (
-        <>
-          <div className="space-y-1.5">
-            <Label>Region *</Label>
-            <Select value={region} onValueChange={handleRegionChange}>
-              <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
-              <SelectContent>
-                {REGIONS.map((r) => <SelectItem key={r} value={r}>{REGIONS_LABELS[r] ?? r}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Campus *</Label>
-            <Select value={campus} onValueChange={setCampus} disabled={!region}>
-              <SelectTrigger>
-                <SelectValue placeholder={!region ? 'Select region first' : campusOptions.length === 0 ? 'No campuses — add in Campus settings' : 'Select campus'} />
-              </SelectTrigger>
-              <SelectContent>
-                {campusOptions.map((c) => <SelectItem key={c._id} value={c.name}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            {region && campusOptions.length === 0 && (
-              <p className="text-xs text-amber-600">No campuses for this region yet. Add them in <strong>Campuses</strong> settings first.</p>
-            )}
-          </div>
-        </>
+      {needsRegion && (
+        <div className="space-y-1.5">
+          <Label>Region *</Label>
+          <Select value={region} onValueChange={handleRegionChange}>
+            <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
+            <SelectContent>
+              {REGIONS.map((r) => <SelectItem key={r} value={r}>{REGIONS_LABELS[r] ?? r}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      {needsCampus && (
+        <div className="space-y-1.5">
+          <Label>Campus *</Label>
+          <Select value={campus} onValueChange={setCampus} disabled={!region}>
+            <SelectTrigger>
+              <SelectValue placeholder={!region ? 'Select region first' : campusOptions.length === 0 ? 'No campuses — add in Campus settings' : 'Select campus'} />
+            </SelectTrigger>
+            <SelectContent>
+              {campusOptions.map((c) => <SelectItem key={c._id} value={c.name}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {region && campusOptions.length === 0 && (
+            <p className="text-xs text-amber-600">No campuses for this region yet. Add them in <strong>Campuses</strong> settings first.</p>
+          )}
+        </div>
       )}
       {role === 'mentor' && (
         <div className="space-y-2">
