@@ -4,7 +4,7 @@ export interface IUserDocument extends Document {
   name: string
   username: string
   password: string
-  role: 'admin' | 'class_teacher' | 'mentor'
+  role: 'admin' | 'class_teacher' | 'mentor' | 'regional_head'
   isActive: boolean
   region: 'calicut' | 'kottakkal' | 'thrissur' | 'ig' | null
   campus: string | null
@@ -35,7 +35,7 @@ const userSchema = new Schema<IUserDocument>(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ['admin', 'class_teacher', 'mentor'],
+      enum: ['admin', 'class_teacher', 'mentor', 'regional_head'],
       required: true,
     },
     isActive: { type: Boolean, default: true },

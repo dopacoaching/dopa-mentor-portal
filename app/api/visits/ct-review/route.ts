@@ -1,26 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { requireRole, isAuthResult } from '@/lib/middleware'
+import User from '@/models/User'
 import Visit from '@/models/Visit'
 import CTVisitReview from '@/models/CTVisitReview'
 import { logAudit } from '@/lib/audit'
 
 export async function GET(request: NextRequest) {
-  const authResult = await requireRole(request, ['class_teacher', 'admin'])
+  const authResult = await requireRole(request, ['class_teacher', 'admin', 'regional_head'])
   if (!isAuthResult(authResult)) return authResult
 
   await connectDB()
   const { searchParams } = new URL(request.url)
   const visitId = searchParams.get('visitId')
   const mentorId = searchParams.get('mentorId')
+  const month = searchParams.get('month')
+  const year = searchParams.get('year')
   const { user } = authResult
 
   const query: Record<string, unknown> = {}
   if (visitId) query.visitId = visitId
   if (mentorId) query.mentorId = mentorId
-  if (user.role === 'class_teacher') query.classTeacherId = user.userId
 
-  const reviews = await CTVisitReview.find(query).sort({ createdAt: -1 })
+  if (user.role === 'class_teacher') {
+    query.classTeacherId = user.userId
+  } else if (user.role === 'regional_head') {
+    const me = await User.findById(user.userId).select('region').lean()
+    if (me?.region) {
+      const regionCTs = await User.find({ role: 'class_teacher', region: me.region }).select('_id').lean()
+      query.classTeacherId = { $in: regionCTs.map((ct) => ct._id) }
+    }
+  }
+
+  if (month && year) {
+    const start = new Date(Number(year), Number(month) - 1, 1)
+    const end = new Date(Number(year), Number(month), 0, 23, 59, 59, 999)
+    query.visitDate = { $gte: start, $lte: end }
+  }
+
+  const reviews = await CTVisitReview.find(query)
+    .populate('mentorId', 'name campus')
+    .populate('classTeacherId', 'name')
+    .sort({ createdAt: -1 })
   return NextResponse.json({ reviews })
 }
 

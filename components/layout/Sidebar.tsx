@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, CheckSquare, MapPin, MessageSquare,
-  FileText, DollarSign, BarChart2, Bell, X, BookOpen, Building2, ShieldCheck, ClipboardList, MessageCircle,
+  FileText, DollarSign, BarChart2, Bell, X, BookOpen, Building2, ShieldCheck, ClipboardList, MessageCircle, UserPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
@@ -35,6 +35,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Visits', href: '/class-teacher/visits', icon: MapPin, roles: ['class_teacher'] },
   { label: 'CT Reviews', href: '/class-teacher/reviews', icon: FileText, roles: ['class_teacher'] },
   { label: 'Chat', href: '/chat', icon: MessageCircle, roles: ['class_teacher'] },
+
+  { label: 'Dashboard', href: '/regional-head', icon: LayoutDashboard, roles: ['regional_head'] },
+  { label: 'Class Teachers', href: '/regional-head/users', icon: UserPlus, roles: ['regional_head'] },
+  { label: 'CT Reviews', href: '/regional-head/reviews', icon: FileText, roles: ['regional_head'] },
+  { label: 'Chat', href: '/chat', icon: MessageCircle, roles: ['regional_head'] },
 
   { label: 'Dashboard', href: '/mentor', icon: LayoutDashboard, roles: ['mentor'] },
   { label: 'Daily Tasks', href: '/mentor/tasks', icon: CheckSquare, roles: ['mentor'] },

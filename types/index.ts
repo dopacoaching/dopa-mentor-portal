@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'class_teacher' | 'mentor'
+export type Role = 'admin' | 'class_teacher' | 'mentor' | 'regional_head'
 export type Region = 'calicut' | 'kottakkal' | 'thrissur' | 'ig'
 export type BatchType = 'residential' | 'online' | 'ig'
 

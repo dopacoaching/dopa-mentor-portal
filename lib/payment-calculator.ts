@@ -196,7 +196,7 @@ function calculateOnlinePayment(params: {
   } = params
 
   const basicPay = 1000
-  const whatsappActivities = hasVerifiedTask ? 1000 : 0
+  const whatsappActivities = hasVerifiedTask ? 1500 : 0
   const weeklyQuiz = visits.some((v) => (v.visitType === 'campus_group' || v.visitType === 'merged_group') && v.countedForPayment)
     ? 750
     : 0
@@ -205,7 +205,7 @@ function calculateOnlinePayment(params: {
     : 0
   const doubtWeb = totalDoubts >= 300 ? 2000 : 0
   const total = Math.min(
-    6000,
+    6500,
     basicPay + whatsappActivities + weeklyQuiz + oneToOne + doubtWeb + meetingPay
   )
 

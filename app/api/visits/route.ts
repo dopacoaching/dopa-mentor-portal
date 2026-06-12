@@ -24,6 +24,13 @@ export async function GET(request: NextRequest) {
     query.mentorId = user.userId
   } else if (user.role === 'class_teacher') {
     query.classTeacherId = user.userId
+  } else if (user.role === 'regional_head') {
+    // Show visits by class teachers in their region
+    const me = await User.findById(user.userId).select('region').lean()
+    if (me?.region) {
+      const regionCTs = await User.find({ role: 'class_teacher', region: me.region }).select('_id').lean()
+      query.classTeacherId = { $in: regionCTs.map((ct) => ct._id) }
+    }
   }
 
   if (mentorId && user.role !== 'mentor') query.mentorId = mentorId

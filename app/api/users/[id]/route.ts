@@ -22,12 +22,32 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const authResult = await requireRole(request, ['admin'])
+  const authResult = await requireRole(request, ['admin', 'regional_head'])
   if (!isAuthResult(authResult)) return authResult
 
   await connectDB()
+  const { user } = authResult
   const body = await request.json()
   const { name, role, region, campus, assignedBatches, isActive, newPassword } = body
+
+  // regional_head can only toggle active status of class_teachers in their region
+  if (user.role === 'regional_head') {
+    const target = await User.findById(params.id).select('role region').lean()
+    if (!target || target.role !== 'class_teacher') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    const me = await User.findById(user.userId).select('region').lean()
+    if (!me?.region || target.region !== me.region) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (isActive === undefined) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    const updated = await User.findByIdAndUpdate(params.id, { isActive }, { new: true }).select('-password')
+    if (!updated) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    logAudit({ user, action: 'user.update', targetType: 'User', targetId: params.id, details: { changed: ['isActive'] }, request })
+    return NextResponse.json({ user: updated })
+  }
 
   const updates: Record<string, unknown> = {}
   if (name !== undefined) updates.name = name
@@ -42,7 +62,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   if (!updated) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
   const changedFields = Object.keys(updates).filter((k) => k !== 'password')
-  logAudit({ user: authResult.user, action: 'user.update', targetType: 'User', targetId: params.id, details: { changed: changedFields, passwordChanged: !!newPassword }, request })
+  logAudit({ user, action: 'user.update', targetType: 'User', targetId: params.id, details: { changed: changedFields, passwordChanged: !!newPassword }, request })
 
   return NextResponse.json({ user: updated })
 }

@@ -55,6 +55,7 @@ export function roleLabel(role: string): string {
     case 'admin': return 'Admin'
     case 'class_teacher': return 'Class Teacher'
     case 'mentor': return 'Mentor'
+    case 'regional_head': return 'Regional Head'
     default: return capitalize(role)
   }
 }
@@ -64,6 +65,7 @@ export function roleDashboard(role: string): string {
     case 'admin': return '/admin'
     case 'class_teacher': return '/class-teacher'
     case 'mentor': return '/mentor'
+    case 'regional_head': return '/regional-head'
     default: return '/login'
   }
 }

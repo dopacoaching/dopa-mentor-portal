@@ -16,7 +16,7 @@ import type { IUser } from '@/types'
 
 const REGIONS = ['calicut', 'kottakkal', 'thrissur', 'ig']
 const REGIONS_LABELS: Record<string, string> = { calicut: 'Calicut', kottakkal: 'Kottakkal', thrissur: 'Thrissur', ig: 'Integrated School (IG)' }
-const ROLES = ['admin', 'class_teacher', 'mentor']
+const ROLES = ['admin', 'class_teacher', 'mentor', 'regional_head']
 
 interface CampusOption { _id: string; name: string; region: string }
 
