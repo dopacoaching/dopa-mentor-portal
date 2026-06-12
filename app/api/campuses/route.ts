@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const region = searchParams.get('region')
 
-  const query: Record<string, unknown> = { isActive: true }
+  const query: Record<string, unknown> = { isActive: { $ne: false } }
   if (region) query.region = region
 
   const campuses = await Campus.find(query).sort({ name: 1 })

@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     query.role = 'admin'
   }
 
-  if (activeOnly) query.isActive = true
+  if (activeOnly) query.isActive = { $ne: false }
 
   const users = await User.find(query).select('-password').sort(sortOrder)
   return NextResponse.json({ users })
