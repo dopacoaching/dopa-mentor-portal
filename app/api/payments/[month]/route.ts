@@ -48,7 +48,7 @@ export async function GET(request: NextRequest, { params }: { params: { month: s
     const taskLogs = allTaskLogs.filter((l) => l.mentorId.toString() === id)
     const doubtLogs = allDoubtLogs.filter((l) => l.mentorId.toString() === id)
     const visits = allVisits.filter((v) => v.mentorId.toString() === id)
-    const mentorType = mentor.assignedBatches?.[0]?.batchType === 'online' ? 'online' : 'offline'
+    const mentorType = mentor.assignedBatches?.some((b) => b.batchType === 'online') ? 'online' : 'offline'
 
     return calculateMentorPayment({
       mentorId: id,

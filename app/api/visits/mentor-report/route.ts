@@ -55,9 +55,17 @@ export async function POST(request: NextRequest) {
   await visit.save()
 
   const msg = `Visit report submitted for ${visit.campus} on ${visit.visitDate.toDateString()}.`
+
+  // Notify the class teacher (stored + real-time)
   const ctNotif = await Notification.create({ recipientId: visit.classTeacherId, type: 'visit_report_submitted', message: msg, relatedId: visit._id })
   sendToUser(visit.classTeacherId.toString(), { type: 'notification', data: ctNotif.toObject() })
-  sendToRole('admin', { type: 'notification', data: ctNotif.toObject() })
+
+  // Notify each admin with their own stored notification
+  const admins = await User.find({ role: 'admin', isActive: true }).select('_id').lean()
+  await Promise.all(admins.map(async (admin) => {
+    const adminNotif = await Notification.create({ recipientId: admin._id, type: 'visit_report_submitted', message: msg, relatedId: visit._id })
+    sendToUser(admin._id.toString(), { type: 'notification', data: adminNotif.toObject() })
+  }))
 
   logAudit({ user, action: 'visit.mentor_report', targetType: 'Visit', targetId: visitId, details: { campus: visit.campus, visitDate: visit.visitDate }, request })
 

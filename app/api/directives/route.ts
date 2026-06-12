@@ -47,6 +47,15 @@ export async function POST(request: NextRequest) {
   if (!title || !content || !targetScope) {
     return NextResponse.json({ error: 'title, content, targetScope required' }, { status: 400 })
   }
+  if (targetScope === 'region' && !targetRegion) {
+    return NextResponse.json({ error: 'targetRegion required when scope is region' }, { status: 400 })
+  }
+  if (targetScope === 'campus' && !targetCampus) {
+    return NextResponse.json({ error: 'targetCampus required when scope is campus' }, { status: 400 })
+  }
+  if (targetScope === 'individual' && !targetMentorId) {
+    return NextResponse.json({ error: 'targetMentorId required when scope is individual' }, { status: 400 })
+  }
 
   const now = new Date()
   const month = now.getMonth() + 1

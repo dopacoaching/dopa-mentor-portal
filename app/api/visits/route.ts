@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'mentorId, visitDate, visitType required' }, { status: 400 })
   }
 
-  const mentor = await User.findById(mentorId).select('campus assignedBatches')
-  if (!mentor) return NextResponse.json({ error: 'Mentor not found' }, { status: 404 })
+  const mentor = await User.findById(mentorId).select('campus assignedBatches role')
+  if (!mentor || mentor.role !== 'mentor') return NextResponse.json({ error: 'Mentor not found' }, { status: 404 })
 
   const date = new Date(visitDate)
   const visit = await Visit.create({
