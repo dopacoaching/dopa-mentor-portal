@@ -5,6 +5,7 @@ import Visit from '@/models/Visit'
 import MentorVisitReport from '@/models/MentorVisitReport'
 import Notification from '@/models/Notification'
 import { sendToUser, sendToRole } from '@/lib/sse'
+import { logAudit } from '@/lib/audit'
 
 export async function POST(request: NextRequest) {
   const authResult = await requireRole(request, ['mentor'])
@@ -51,6 +52,8 @@ export async function POST(request: NextRequest) {
   const ctNotif = await Notification.create({ recipientId: visit.classTeacherId, type: 'visit_report_submitted', message: msg, relatedId: visit._id })
   sendToUser(visit.classTeacherId.toString(), { type: 'notification', data: ctNotif.toObject() })
   sendToRole('admin', { type: 'notification', data: ctNotif.toObject() })
+
+  logAudit({ user, action: 'visit.mentor_report', targetType: 'Visit', targetId: visitId, details: { campus: visit.campus, visitDate: visit.visitDate }, request })
 
   return NextResponse.json({ report }, { status: 201 })
 }

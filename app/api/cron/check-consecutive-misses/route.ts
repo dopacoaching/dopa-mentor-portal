@@ -13,23 +13,28 @@ export async function GET(request: NextRequest) {
 
   await connectDB()
   const now = new Date()
+  const cutoff = new Date(now.getTime() - 4 * 86400000)
   const mentors = await User.find({ role: 'mentor', isActive: true }).select('_id name region')
+  const mentorIds = mentors.map((m) => m._id)
+
+  // Batch-fetch all logs for all mentors in last 4 days (1 query instead of N)
+  const allLogs = await TaskLog.find({
+    mentorId: { $in: mentorIds },
+    date: { $gte: cutoff },
+  }).lean()
+
+  const last4days: string[] = []
+  for (let i = 1; i <= 4; i++) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - i)
+    d.setHours(0, 0, 0, 0)
+    last4days.push(d.toDateString())
+  }
 
   let flagged = 0
   for (const mentor of mentors) {
-    const last4days: string[] = []
-    for (let i = 1; i <= 4; i++) {
-      const d = new Date(now)
-      d.setDate(d.getDate() - i)
-      d.setHours(0, 0, 0, 0)
-      last4days.push(d.toDateString())
-    }
-
-    const logs = await TaskLog.find({
-      mentorId: mentor._id,
-      date: { $gte: new Date(now.getTime() - 4 * 86400000) },
-    })
-
+    const id = mentor._id.toString()
+    const logs = allLogs.filter((l) => l.mentorId.toString() === id)
     const misses = last4days.filter((ds) => {
       const log = logs.find((l) => new Date(l.date).toDateString() === ds)
       return !log || log.status === 'auto_closed'

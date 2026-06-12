@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import TaskLog from '@/models/TaskLog'
+import User from '@/models/User'
 import Notification from '@/models/Notification'
 import { sendToRole } from '@/lib/sse'
 
@@ -17,12 +18,21 @@ export async function GET(request: NextRequest) {
 
   if (stale.length > 0) {
     const msg = `${stale.length} task submission${stale.length > 1 ? 's have' : ' has'} been unverified for more than 24 hours.`
-    const notif = await Notification.create({
-      recipientId: '000000000000000000000000',
-      type: 'unverified_tasks',
-      message: msg,
-    })
-    sendToRole('admin', { type: 'notification', data: { ...notif.toObject(), message: msg } })
+
+    // Send SSE to all admins in real-time
+    sendToRole('admin', { type: 'notification', data: { message: msg, type: 'unverified_tasks' } })
+
+    // Create a notification for every admin so it appears in their bell
+    const admins = await User.find({ role: 'admin', isActive: true }).select('_id').lean()
+    await Promise.all(
+      admins.map((admin) =>
+        Notification.create({
+          recipientId: admin._id,
+          type: 'unverified_tasks',
+          message: msg,
+        })
+      )
+    )
   }
 
   return NextResponse.json({ staleCount: stale.length })

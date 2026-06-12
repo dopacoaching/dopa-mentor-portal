@@ -39,25 +39,33 @@ export async function GET(request: NextRequest, { params }: { params: { type: st
       const mentorQuery: Record<string, unknown> = { role: 'mentor', isActive: true }
       if (campus) mentorQuery.campus = campus
       const mentors = await User.find(mentorQuery).select('-password')
-      const taskData = await Promise.all(mentors.map(async (m) => {
-        const logs = await TaskLog.find({ mentorId: m._id, date: { $gte: start, $lte: end } })
+      const mentorIds = mentors.map((m) => m._id)
+      const allLogs = await TaskLog.find({ mentorId: { $in: mentorIds }, date: { $gte: start, $lte: end } }).lean()
+      const taskData = mentors.map((m) => {
+        const id = m._id.toString()
+        const logs = allLogs.filter((l) => l.mentorId.toString() === id)
         const verified = logs.filter((l) => l.status === 'verified').length
         return { mentor: m, totalLogs: logs.length, verifiedLogs: verified, compliancePct: logs.length > 0 ? Math.round((verified / logs.length) * 100) : 0 }
-      }))
+      })
       data = { mentors: taskData, campus, month, year }
       break
     }
     case 'payment-summary': {
       const mentors = await User.find({ role: 'mentor', isActive: true }).select('name assignedBatches')
-      const payments = await Promise.all(mentors.map(async (m) => {
-        const [tasks, doubts, visits] = await Promise.all([
-          TaskLog.find({ mentorId: m._id, date: { $gte: start, $lte: end } }),
-          DoubtLog.find({ mentorId: m._id, month, year }),
-          Visit.find({ mentorId: m._id, month, year }),
-        ])
+      const mentorIds = mentors.map((m) => m._id)
+      const [allTasks, allDoubts, allVisits] = await Promise.all([
+        TaskLog.find({ mentorId: { $in: mentorIds }, date: { $gte: start, $lte: end } }).lean(),
+        DoubtLog.find({ mentorId: { $in: mentorIds }, month, year }).lean(),
+        Visit.find({ mentorId: { $in: mentorIds }, month, year }).lean(),
+      ])
+      const payments = mentors.map((m) => {
+        const id = m._id.toString()
+        const tasks = allTasks.filter((t) => t.mentorId.toString() === id)
+        const doubts = allDoubts.filter((d) => d.mentorId.toString() === id)
+        const visits = allVisits.filter((v) => v.mentorId.toString() === id)
         const mentorType = m.assignedBatches?.[0]?.batchType === 'online' ? 'online' : 'offline'
-        return calculateMentorPayment({ mentorId: m._id.toString(), mentorName: m.name, mentorType, month, year, taskLogs: tasks, doubtLogs: doubts, visits, meetingAttended: false })
-      }))
+        return calculateMentorPayment({ mentorId: id, mentorName: m.name, mentorType, month, year, taskLogs: tasks as never, doubtLogs: doubts as never, visits: visits as never, meetingAttended: false })
+      })
       data = { payments, month, year }
       break
     }
@@ -69,7 +77,9 @@ export async function GET(request: NextRequest, { params }: { params: { type: st
       break
     }
     case 'ct-reviews': {
-      const reviewQuery: Record<string, unknown> = {}
+      const reviewQuery: Record<string, unknown> = {
+        visitDate: { $gte: start, $lte: end },
+      }
       if (mentorId) reviewQuery.mentorId = mentorId
       const reviews = await CTVisitReview.find(reviewQuery)
         .populate('mentorId', 'name campus')

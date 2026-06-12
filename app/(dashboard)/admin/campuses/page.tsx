@@ -57,8 +57,10 @@ export default function CampusesPage() {
   }
 
   async function handleDelete(id: string, campusName: string) {
+    if (!window.confirm(`Remove "${campusName}"? This cannot be undone.`)) return
     const r = await fetch(`/api/campuses/${id}`, { method: 'DELETE' })
     if (r.ok) { toast.success(`${campusName} removed`); await fetchCampuses() }
+    else { toast.error('Failed to remove campus') }
   }
 
   const grouped = REGIONS.map((r) => ({

@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb'
 import { requireRole, isAuthResult } from '@/lib/middleware'
 import Visit from '@/models/Visit'
 import CTVisitReview from '@/models/CTVisitReview'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(request: NextRequest) {
   const authResult = await requireRole(request, ['class_teacher', 'admin'])
@@ -64,6 +65,8 @@ export async function POST(request: NextRequest) {
     visit.countedForPayment = true
   }
   await visit.save()
+
+  logAudit({ user, action: 'visit.ct_review', targetType: 'Visit', targetId: visitId, details: { mentorId: visit.mentorId.toString(), overallEffectiveness }, request })
 
   return NextResponse.json({ review }, { status: 201 })
 }

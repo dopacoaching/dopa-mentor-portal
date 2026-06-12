@@ -114,6 +114,7 @@ export interface IVisit {
   year: number
   status: VisitStatus
   mentorChangeReason: string | null
+  ctRemark: string | null
   mentorReportSubmitted: boolean
   ctReviewSubmitted: boolean
   countedForPayment: boolean

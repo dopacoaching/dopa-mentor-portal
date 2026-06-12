@@ -9,10 +9,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (pathname.startsWith('/api/cron')) {
-    return NextResponse.next()
-  }
-
   if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }

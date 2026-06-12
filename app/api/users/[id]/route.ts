@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { connectDB } from '@/lib/mongodb'
 import { requireRole, requireAuth, isAuthResult } from '@/lib/middleware'
 import User from '@/models/User'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const authResult = await requireAuth(request)
@@ -39,6 +40,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
   const updated = await User.findByIdAndUpdate(params.id, updates, { new: true }).select('-password')
   if (!updated) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+  const changedFields = Object.keys(updates).filter((k) => k !== 'password')
+  logAudit({ user: authResult.user, action: 'user.update', targetType: 'User', targetId: params.id, details: { changed: changedFields, passwordChanged: !!newPassword }, request })
+
   return NextResponse.json({ user: updated })
 }
 
@@ -49,5 +54,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   await connectDB()
   const deleted = await User.findByIdAndDelete(params.id)
   if (!deleted) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+  logAudit({ user: authResult.user, action: 'user.delete', targetType: 'User', targetId: params.id, details: { name: deleted.name, username: deleted.username }, request })
+
   return NextResponse.json({ message: 'User deleted' })
 }

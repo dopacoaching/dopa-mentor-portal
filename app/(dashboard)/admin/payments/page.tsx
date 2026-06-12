@@ -14,14 +14,22 @@ export default function AdminPaymentsPage() {
   const [year, setYear] = useState(now.getFullYear())
   const [payments, setPayments] = useState<PaymentBreakdown[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<PaymentBreakdown | null>(null)
 
   async function fetchPayments() {
     setLoading(true)
-    const r = await fetch(`/api/payments/${month}-${year}`)
-    const d = await r.json()
-    setPayments(d.payments ?? [])
-    setLoading(false)
+    setError(null)
+    try {
+      const r = await fetch(`/api/payments/${month}-${year}`)
+      if (!r.ok) throw new Error(`Server error ${r.status}`)
+      const d = await r.json()
+      setPayments(d.payments ?? [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load payments')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { fetchPayments() }, [month, year])
@@ -70,7 +78,9 @@ export default function AdminPaymentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {loading ? (
+              {error ? (
+                <tr><td colSpan={8} className="text-center py-12 text-red-500 dark:text-red-400">{error}</td></tr>
+              ) : loading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}><td colSpan={8} className="px-4 py-3"><div className="h-4 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" /></td></tr>
                 ))

@@ -5,6 +5,7 @@ import Directive from '@/models/Directive'
 import User from '@/models/User'
 import Notification from '@/models/Notification'
 import { sendToUser } from '@/lib/sse'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
@@ -80,6 +81,8 @@ export async function POST(request: NextRequest) {
       sendToUser(m._id.toString(), { type: 'notification', data: notif.toObject() })
     }))
   }
+
+  logAudit({ user: authResult.user, action: 'directive.create', targetType: 'Directive', targetId: directive._id.toString(), details: { title, targetScope }, request })
 
   return NextResponse.json({ directive }, { status: 201 })
 }

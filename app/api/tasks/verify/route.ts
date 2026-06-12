@@ -4,6 +4,7 @@ import { requireRole, isAuthResult } from '@/lib/middleware'
 import TaskLog from '@/models/TaskLog'
 import Notification from '@/models/Notification'
 import { sendToUser } from '@/lib/sse'
+import { logAudit } from '@/lib/audit'
 
 export async function POST(request: NextRequest) {
   const authResult = await requireRole(request, ['class_teacher', 'admin'])
@@ -24,6 +25,8 @@ export async function POST(request: NextRequest) {
   log.verificationNote = note || null
   log.verifiedAt = new Date()
   await log.save()
+
+  logAudit({ user: authResult.user, action: `task.${action}`, targetType: 'TaskLog', targetId: logId, details: { note: note || null, mentorId: log.mentorId.toString() }, request })
 
   if (action === 'flagged') {
     const notification = await Notification.create({

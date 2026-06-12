@@ -16,22 +16,27 @@ export default function ClassTeacherDashboard() {
   const [recentLogs, setRecentLogs] = useState<(ITaskLog & { mentorId: IUser })[]>([])
   const [upcomingVisits, setUpcomingVisits] = useState<IVisit[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     const now = new Date()
     const m = now.getMonth() + 1
     const y = now.getFullYear()
     Promise.all([
-      fetch(`/api/tasks?month=${m}&year=${y}`).then((r) => r.json()),
-      fetch(`/api/visits?month=${m}&year=${y}`).then((r) => r.json()),
+      fetch(`/api/tasks?month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
+      fetch(`/api/visits?month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
     ]).then(([tasks, vis]) => {
       const logs = tasks.logs ?? []
       const pendingLogs = logs.filter((l: ITaskLog) => l.status === 'submitted')
       setPending(pendingLogs.length)
       setRecentLogs(logs.slice(0, 5))
       setUpcomingVisits((vis.visits ?? []).filter((v: IVisit) => v.status !== 'completed').slice(0, 5))
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch(() => setError(true)).finally(() => setLoading(false))
   }, [])
+
+  if (error) {
+    return <div className="py-20 text-center text-red-500">Failed to load dashboard. Please refresh.</div>
+  }
 
   return (
     <div className="space-y-6">

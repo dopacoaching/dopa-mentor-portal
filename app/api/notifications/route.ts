@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
   await connectDB()
   const { searchParams } = new URL(request.url)
-  const limit = Number(searchParams.get('limit') ?? 20)
+  const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit') ?? 20)))
 
   const notifications = await Notification.find({ recipientId: authResult.user.userId })
     .sort({ createdAt: -1 })

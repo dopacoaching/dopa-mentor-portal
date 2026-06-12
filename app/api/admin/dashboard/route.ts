@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     User.countDocuments({ role: 'mentor', isActive: true }),
     User.countDocuments({ role: 'class_teacher', isActive: true }),
     TaskLog.find({ date: { $gte: todayStart, $lte: todayEnd } }).populate('mentorId', 'name campus assignedBatches'),
-    TaskLog.find({ status: 'submitted', date: { $lt: now } }).populate('mentorId', 'name assignedBatches').sort({ createdAt: 1 }),
+    TaskLog.find({ status: 'submitted', date: { $lt: now } }).populate('mentorId', 'name assignedBatches').sort({ createdAt: 1 }).limit(50),
     Visit.find({ visitDate: { $gte: now, $lte: sevenDaysLater }, status: { $in: ['scheduled', 'confirmed'] } })
       .populate('mentorId', 'name')
       .sort({ visitDate: 1 })

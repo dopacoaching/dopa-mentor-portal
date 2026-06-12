@@ -11,6 +11,7 @@ export interface IVisitDocument extends Document {
   year: number
   status: 'scheduled' | 'confirmed' | 'change_requested' | 'completed' | 'missed'
   mentorChangeReason: string | null
+  ctRemark: string | null
   mentorReportSubmitted: boolean
   ctReviewSubmitted: boolean
   countedForPayment: boolean
@@ -34,6 +35,7 @@ const visitSchema = new Schema<IVisitDocument>(
       default: 'scheduled',
     },
     mentorChangeReason: { type: String, default: null },
+    ctRemark: { type: String, default: null },
     mentorReportSubmitted: { type: Boolean, default: false },
     ctReviewSubmitted: { type: Boolean, default: false },
     countedForPayment: { type: Boolean, default: false },

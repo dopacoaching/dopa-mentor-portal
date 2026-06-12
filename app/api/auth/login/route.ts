@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { connectDB } from '@/lib/mongodb'
 import { signJWT, setAuthCookie } from '@/lib/auth'
 import User from '@/models/User'
+import { logAudit } from '@/lib/audit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,6 +36,14 @@ export async function POST(request: NextRequest) {
     }
 
     const token = signJWT({ userId: user._id.toString(), role: user.role })
+
+    logAudit({
+      user: { userId: user._id.toString(), role: user.role },
+      userName: user.name,
+      action: 'user.login',
+      details: { username: user.username },
+      request,
+    })
 
     const response = NextResponse.json({
       user: {

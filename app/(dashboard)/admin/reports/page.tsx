@@ -29,14 +29,15 @@ export default function AdminReportsPage() {
       const r = await fetch(`/api/reports/${type}?${params}`)
       if (!r.ok) { toast.error('Failed to generate report'); return }
 
-      const blob = await r.blob()
+      const json = await r.json()
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${type}-${MONTHS[month - 1].toLowerCase()}-${year}.pdf`
+      a.download = `${type}-${MONTHS[month - 1].toLowerCase()}-${year}.json`
       a.click()
       URL.revokeObjectURL(url)
-      toast.success('Report downloaded!')
+      toast.success('Report exported!')
     } catch { toast.error('Failed to generate report') }
     finally { setLoading(null) }
   }
@@ -104,7 +105,7 @@ export default function AdminReportsPage() {
                     onClick={() => handleDownload(report.type)}
                   >
                     <Download className="w-3.5 h-3.5 mr-1.5" />
-                    {loading === report.type ? 'Generating...' : 'Generate PDF'}
+                    {loading === report.type ? 'Exporting...' : 'Export JSON'}
                   </Button>
                 </div>
               </div>

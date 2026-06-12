@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
-import { requireRole, requireAuth, isAuthResult } from '@/lib/middleware'
+import { requireAuth, isAuthResult } from '@/lib/middleware'
 import User from '@/models/User'
 import TaskLog from '@/models/TaskLog'
 import DoubtLog from '@/models/DoubtLog'
@@ -24,34 +24,44 @@ export async function GET(request: NextRequest, { params }: { params: { month: s
   const year = Number(yearStr) || new Date().getFullYear()
   const meetingAttended = searchParams.get('meetingAttended') === 'true'
 
+  if (!month || month < 1 || month > 12) {
+    return NextResponse.json({ error: 'Invalid month parameter' }, { status: 400 })
+  }
+
   const { start, end } = getMonthRange(month, year)
 
   const mentorQuery: Record<string, unknown> = { role: 'mentor', isActive: true }
   if (user.role === 'mentor') mentorQuery._id = user.userId
 
   const mentors = await User.find(mentorQuery).select('name assignedBatches')
+  const mentorIds = mentors.map((m) => m._id)
 
-  const payments = await Promise.all(mentors.map(async (mentor) => {
-    const [taskLogs, doubtLogs, visits] = await Promise.all([
-      TaskLog.find({ mentorId: mentor._id, date: { $gte: start, $lte: end } }),
-      DoubtLog.find({ mentorId: mentor._id, month, year }),
-      Visit.find({ mentorId: mentor._id, month, year }),
-    ])
+  // Batch-fetch all data in 3 queries instead of 3×N
+  const [allTaskLogs, allDoubtLogs, allVisits] = await Promise.all([
+    TaskLog.find({ mentorId: { $in: mentorIds }, date: { $gte: start, $lte: end } }).lean(),
+    DoubtLog.find({ mentorId: { $in: mentorIds }, month, year }).lean(),
+    Visit.find({ mentorId: { $in: mentorIds }, month, year }).lean(),
+  ])
 
+  const payments = mentors.map((mentor) => {
+    const id = mentor._id.toString()
+    const taskLogs = allTaskLogs.filter((l) => l.mentorId.toString() === id)
+    const doubtLogs = allDoubtLogs.filter((l) => l.mentorId.toString() === id)
+    const visits = allVisits.filter((v) => v.mentorId.toString() === id)
     const mentorType = mentor.assignedBatches?.[0]?.batchType === 'online' ? 'online' : 'offline'
 
     return calculateMentorPayment({
-      mentorId: mentor._id.toString(),
+      mentorId: id,
       mentorName: mentor.name,
       mentorType,
       month,
       year,
-      taskLogs,
-      doubtLogs,
-      visits,
+      taskLogs: taskLogs as never,
+      doubtLogs: doubtLogs as never,
+      visits: visits as never,
       meetingAttended,
     })
-  }))
+  })
 
   payments.sort((a, b) => b.total - a.total)
   return NextResponse.json({ payments, month, year })

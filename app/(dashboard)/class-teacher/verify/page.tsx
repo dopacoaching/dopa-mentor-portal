@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
 import type { ITaskLog, IUser } from '@/types'
 
-type PopulatedLog = ITaskLog & { mentorId: IUser }
+type PopulatedLog = Omit<ITaskLog, 'mentorId'> & { mentorId: IUser }
 
 export default function VerifyTasksPage() {
   const [logs, setLogs] = useState<PopulatedLog[]>([])

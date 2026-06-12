@@ -5,6 +5,7 @@ import Visit from '@/models/Visit'
 import User from '@/models/User'
 import Notification from '@/models/Notification'
 import { sendToUser } from '@/lib/sse'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   await connectDB()
   const body = await request.json()
-  const { mentorId, visitDate, visitType, batchId } = body
+  const { mentorId, visitDate, visitType, batchId, ctRemark } = body
 
   if (!mentorId || !visitDate || !visitType) {
     return NextResponse.json({ error: 'mentorId, visitDate, visitType required' }, { status: 400 })
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
     month: date.getMonth() + 1,
     year: date.getFullYear(),
     status: 'scheduled',
+    ctRemark: ctRemark || null,
     mentorReportSubmitted: false,
     ctReviewSubmitted: false,
     countedForPayment: false,
@@ -75,6 +77,8 @@ export async function POST(request: NextRequest) {
     relatedId: visit._id,
   })
   sendToUser(mentorId, { type: 'notification', data: notification.toObject() })
+
+  logAudit({ user: authResult.user, action: 'visit.schedule', targetType: 'Visit', targetId: visit._id.toString(), details: { mentorId, visitDate, visitType, campus: visit.campus }, request })
 
   return NextResponse.json({ visit }, { status: 201 })
 }

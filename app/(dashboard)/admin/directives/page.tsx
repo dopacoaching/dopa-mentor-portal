@@ -51,8 +51,10 @@ export default function AdminDirectivesPage() {
   }
 
   async function handleArchive(id: string) {
+    if (!window.confirm('Archive this directive? It will no longer be visible to mentors.')) return
     const r = await fetch(`/api/directives/${id}`, { method: 'DELETE' })
     if (r.ok) { toast.success('Directive archived'); await fetchDirectives() }
+    else { toast.error('Failed to archive directive') }
   }
 
   const active = directives.filter((d) => d.isActive)

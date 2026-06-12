@@ -9,11 +9,14 @@ import type { IDirective } from '@/types'
 export default function MentorDirectivesPage() {
   const [directives, setDirectives] = useState<IDirective[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    fetch('/api/directives').then((r) => r.json()).then((d) => {
-      setDirectives(d.directives ?? [])
-    }).catch(() => {}).finally(() => setLoading(false))
+    fetch('/api/directives')
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((d) => setDirectives(d.directives ?? []))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
   }, [])
 
   return (
@@ -32,7 +35,9 @@ export default function MentorDirectivesPage() {
         </div>
       )}
 
-      {loading ? (
+      {error ? (
+        <div className="py-16 text-center text-red-500">Failed to load directives. Please refresh.</div>
+      ) : loading ? (
         <div className="space-y-3">{[...Array(2)].map((_, i) => <div key={i} className="h-32 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />)}</div>
       ) : directives.length === 0 ? (
         <div className="text-center py-16 text-gray-400">

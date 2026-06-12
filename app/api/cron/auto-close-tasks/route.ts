@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
       await log.save()
       closed++
 
-      const mentorId = log.mentorId._id?.toString() ?? log.mentorId.toString()
       const mentor = log.mentorId as unknown as { name: string }
 
       const msg = `${mentor.name ?? 'A mentor'} missed tasks on ${now.toDateString()}. Log auto-closed.`

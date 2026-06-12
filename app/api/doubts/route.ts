@@ -5,6 +5,7 @@ import DoubtLog from '@/models/DoubtLog'
 import Notification from '@/models/Notification'
 import { sendToUser } from '@/lib/sse'
 import { getDayStart, getDayEnd } from '@/lib/utils'
+import { logAudit } from '@/lib/audit'
 
 export async function POST(request: NextRequest) {
   const authResult = await requireRole(request, ['mentor'])
@@ -63,6 +64,8 @@ export async function POST(request: NextRequest) {
       sendToUser(user.userId, { type: 'notification', data: notification.toObject() })
     }
   }
+
+  logAudit({ user, action: 'doubt.log', targetType: 'DoubtLog', targetId: log._id.toString(), details: { total, monthlyTotal }, request })
 
   return NextResponse.json({ log, monthlyTotal })
 }

@@ -40,6 +40,7 @@ export default function MentorVisitsPage() {
   const [reportDialog, setReportDialog] = useState<{ visit: IVisit | null; open: boolean }>({ visit: null, open: false })
   const [reportForm, setReportForm] = useState<ReportForm>({ numberOfStudentsMet: 0, discussionTopics: '', directiveCovered: false, studentObservations: '', followUpRequired: false, followUpDetails: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   const fetchVisits = useCallback(async () => {
     if (!userId) return
@@ -53,9 +54,14 @@ export default function MentorVisitsPage() {
   useEffect(() => { fetchVisits() }, [fetchVisits])
 
   async function handleConfirm(visitId: string) {
-    const r = await fetch('/api/visits/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visitId, action: 'confirm' }) })
-    if (r.ok) { toast.success('Visit confirmed!'); await fetchVisits() }
-    else { const d = await r.json(); toast.error(d.error) }
+    setConfirmingId(visitId)
+    try {
+      const r = await fetch('/api/visits/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visitId, action: 'confirm' }) })
+      if (r.ok) { toast.success('Visit confirmed!'); await fetchVisits() }
+      else { const d = await r.json(); toast.error(d.error) }
+    } finally {
+      setConfirmingId(null)
+    }
   }
 
   async function handleChangeRequest() {
@@ -123,8 +129,8 @@ export default function MentorVisitsPage() {
                     <div className="flex flex-col gap-1.5 flex-shrink-0">
                       {visit.status === 'scheduled' && (
                         <>
-                          <Button size="sm" onClick={() => handleConfirm(visit._id)}>
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Confirm
+                          <Button size="sm" onClick={() => handleConfirm(visit._id)} disabled={confirmingId === visit._id}>
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> {confirmingId === visit._id ? 'Confirming…' : 'Confirm'}
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => { setChangeDialog({ visitId: visit._id, open: true }); setChangeReason('') }}>
                             <AlertCircle className="w-3.5 h-3.5 mr-1" /> Change

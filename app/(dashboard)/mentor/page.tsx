@@ -20,6 +20,7 @@ export default function MentorDashboard() {
   const [directives, setDirectives] = useState<IDirective[]>([])
   const [visits, setVisits] = useState<IVisit[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     if (!userId) return
@@ -27,10 +28,10 @@ export default function MentorDashboard() {
     const m = now.getMonth() + 1
     const y = now.getFullYear()
     Promise.all([
-      fetch(`/api/tasks/${userId}?month=${m}&year=${y}`).then((r) => r.json()),
-      fetch(`/api/doubts/${userId}?month=${m}&year=${y}`).then((r) => r.json()),
-      fetch('/api/directives').then((r) => r.json()),
-      fetch(`/api/visits?mentorId=${userId}&month=${m}&year=${y}`).then((r) => r.json()),
+      fetch(`/api/tasks/${userId}?month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
+      fetch(`/api/doubts/${userId}?month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
+      fetch('/api/directives').then((r) => { if (!r.ok) throw new Error(); return r.json() }),
+      fetch(`/api/visits?mentorId=${userId}&month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
     ]).then(([tasks, doubts, dirs, vis]) => {
       const todayStr = now.toDateString()
       const todayLog = tasks.logs?.find((l: ITaskLog) => new Date(l.date).toDateString() === todayStr) ?? null
@@ -38,8 +39,12 @@ export default function MentorDashboard() {
       setDoubtSummary({ total: doubts.summary?.total ?? 0 })
       setDirectives(dirs.directives ?? [])
       setVisits(vis.visits ?? [])
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch(() => setError(true)).finally(() => setLoading(false))
   }, [userId])
+
+  if (error) {
+    return <div className="py-20 text-center text-red-500">Failed to load dashboard. Please refresh.</div>
+  }
 
   const todayCompleted = taskLog?.tasks.filter((t) => t.completed).length ?? 0
   const progressPct = (doubtSummary.total / 300) * 100

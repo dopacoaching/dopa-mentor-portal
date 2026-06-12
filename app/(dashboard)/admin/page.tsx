@@ -24,14 +24,19 @@ export default function AdminDashboard() {
   const router = useRouter()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     fetch('/api/admin/dashboard')
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((d) => setData(d))
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
+
+  if (error) {
+    return <div className="py-20 text-center text-red-500">Failed to load dashboard. Please refresh.</div>
+  }
 
   if (loading) {
     return (

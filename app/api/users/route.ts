@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { connectDB } from '@/lib/mongodb'
 import { requireRole, isAuthResult } from '@/lib/middleware'
 import User from '@/models/User'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(request: NextRequest) {
   const authResult = await requireRole(request, ['admin', 'class_teacher'])
@@ -53,5 +54,8 @@ export async function POST(request: NextRequest) {
   })
 
   const { password: _pw, ...userObj } = newUser.toObject()
+
+  logAudit({ user: authResult.user, action: 'user.create', targetType: 'User', targetId: newUser._id.toString(), details: { name, username: username.toLowerCase().trim(), role }, request })
+
   return NextResponse.json({ user: userObj }, { status: 201 })
 }

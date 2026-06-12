@@ -5,6 +5,7 @@ import TaskLog from '@/models/TaskLog'
 import User from '@/models/User'
 import { TASK_KEYS, TASK_NAMES } from '@/types'
 import { getDayStart, getDayEnd } from '@/lib/utils'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
@@ -56,8 +57,18 @@ export async function POST(request: NextRequest) {
     date: { $gte: todayStart, $lte: todayEnd },
   })
 
-  if (existing && existing.status !== 'submitted') {
+  // Allow resubmission if flagged (mentor correcting their tasks).
+  // Verified and auto_closed logs cannot be changed.
+  if (existing && (existing.status === 'verified' || existing.status === 'auto_closed')) {
     return NextResponse.json({ error: 'Task log already finalized for today' }, { status: 409 })
+  }
+
+  // Reset status to submitted when mentor updates a flagged log
+  if (existing && existing.status === 'flagged') {
+    existing.status = 'submitted'
+    existing.verificationNote = null
+    existing.verifiedBy = null
+    existing.verifiedAt = null
   }
 
   const defaultTasks = TASK_KEYS.map((key) => ({
@@ -98,6 +109,9 @@ export async function POST(request: NextRequest) {
     tasks: mergedTasks,
     status: 'submitted',
   })
+
+  const completed = mergedTasks.filter((t) => t.completed).length
+  logAudit({ user, action: 'task.submit', targetType: 'TaskLog', targetId: log._id.toString(), details: { batchId: resolvedBatchId, completed }, request })
 
   return NextResponse.json({ log }, { status: 201 })
 }

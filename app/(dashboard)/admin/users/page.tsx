@@ -158,11 +158,19 @@ export default function UsersPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [editUser, setEditUser] = useState<IUser | null>(null)
 
+  const [error, setError] = useState(false)
+
   async function fetchUsers() {
-    const r = await fetch('/api/users')
-    const d = await r.json()
-    setUsers(d.users ?? [])
-    setLoading(false)
+    try {
+      const r = await fetch('/api/users')
+      if (!r.ok) throw new Error()
+      const d = await r.json()
+      setUsers(d.users ?? [])
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { fetchUsers() }, [])
@@ -185,8 +193,11 @@ export default function UsersPage() {
   }
 
   async function toggleActive(user: IUser) {
+    const action = user.isActive ? 'deactivate' : 'reactivate'
+    if (!window.confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${user.name}?`)) return
     const r = await fetch(`/api/users/${user._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: !user.isActive }) })
     if (r.ok) { toast.success(`User ${user.isActive ? 'deactivated' : 'reactivated'}`); await fetchUsers() }
+    else { const d = await r.json(); toast.error(d.error ?? 'Failed to update user') }
   }
 
   return (
@@ -198,7 +209,9 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="py-20 text-center text-red-500">Failed to load users. Please refresh.</div>
+      ) : loading ? (
         <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-14 bg-gray-100 dark:bg-slate-800 rounded-lg animate-pulse" />)}</div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-xl border dark:border-slate-700 overflow-hidden">

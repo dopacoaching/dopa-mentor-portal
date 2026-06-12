@@ -21,15 +21,23 @@ export default function AdminVisitsPage() {
   const now = new Date()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
-  const [visits, setVisits] = useState<(IVisit & { mentorId: IUser })[]>([])
+  const [visits, setVisits] = useState<(Omit<IVisit, 'mentorId'> & { mentorId: IUser })[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
 
   const fetchVisits = useCallback(async () => {
     setLoading(true)
-    const r = await fetch(`/api/visits?month=${month}&year=${year}`)
-    const d = await r.json()
-    setVisits(d.visits ?? [])
-    setLoading(false)
+    setError(false)
+    try {
+      const r = await fetch(`/api/visits?month=${month}&year=${year}`)
+      if (!r.ok) throw new Error()
+      const d = await r.json()
+      setVisits(d.visits ?? [])
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
   }, [month, year])
 
   useEffect(() => { fetchVisits() }, [fetchVisits])
@@ -70,7 +78,9 @@ export default function AdminVisitsPage() {
               </tr>
             </thead>
             <tbody className="divide-y dark:divide-slate-700">
-              {loading ? (
+              {error ? (
+                <tr><td colSpan={8} className="text-center py-12 text-red-500 dark:text-red-400">Failed to load visits. Please refresh.</td></tr>
+              ) : loading ? (
                 [...Array(5)].map((_, i) => <tr key={i}><td colSpan={8} className="px-4 py-3"><div className="h-4 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" /></td></tr>)
               ) : visits.length === 0 ? (
                 <tr><td colSpan={8} className="text-center py-12 text-gray-400 dark:text-slate-500">

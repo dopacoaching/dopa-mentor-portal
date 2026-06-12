@@ -13,9 +13,10 @@ import { formatDate } from '@/lib/utils'
 import type { IVisit, IUser } from '@/types'
 
 export default function CTReviewsPage() {
-  const [visits, setVisits] = useState<(IVisit & { mentorId: IUser })[]>([])
+  const [visits, setVisits] = useState<(Omit<IVisit, 'mentorId'> & { mentorId: IUser })[]>([])
   const [loading, setLoading] = useState(true)
-  const [reviewDialog, setReviewDialog] = useState<{ visit: IVisit | null; open: boolean }>({ visit: null, open: false })
+  type PopulatedVisit = Omit<IVisit, 'mentorId'> & { mentorId: IUser }
+  const [reviewDialog, setReviewDialog] = useState<{ visit: PopulatedVisit | null; open: boolean }>({ visit: null, open: false })
   const [form, setForm] = useState({ wasPunctual: true, interactionQuality: 3, interactionComments: '', directiveCovered: 'yes', overallEffectiveness: 3, observations: '', recommendedAction: 'none' })
   const [submitting, setSubmitting] = useState(false)
 
