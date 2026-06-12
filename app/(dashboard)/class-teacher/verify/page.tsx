@@ -70,24 +70,46 @@ export default function VerifyTasksPage() {
     const isOpen = expanded === log._id
     const completed = log.tasks.filter((t) => t.completed).length
     const hoursSince = Math.round((Date.now() - new Date(log.createdAt).getTime()) / 3600000)
+    const isPending = log.status === 'submitted'
     return (
-      <div className="border dark:border-slate-700 rounded-xl overflow-hidden">
-        <div
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50"
-          onClick={() => setExpanded(isOpen ? null : log._id)}
-        >
-          <div className="flex items-center gap-3">
-            {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 dark:text-slate-500" /> : <ChevronDown className="w-4 h-4 text-gray-400 dark:text-slate-500" />}
+      <div className={`border rounded-xl overflow-hidden transition-colors ${isPending && showActions ? 'border-amber-300 dark:border-amber-700' : 'dark:border-slate-700'}`}>
+        <div className="flex items-center justify-between p-4">
+          <button
+            className="flex items-center gap-3 flex-1 text-left"
+            onClick={() => setExpanded(isOpen ? null : log._id)}
+          >
+            {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0" />}
             <div>
               <p className="font-medium text-sm">{log.mentorId?.name ?? 'Unknown'}</p>
               <p className="text-xs text-gray-400 dark:text-slate-500">{formatDate(log.date)} · Batch: {log.batchId} · {completed}/9 done</p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {log.status === 'submitted' && <Badge variant="warning">{hoursSince}h ago</Badge>}
+          </button>
+          <div className="flex items-center gap-2 ml-2">
+            {isPending && <Badge variant="warning">{hoursSince}h ago</Badge>}
             {log.status === 'verified' && <Badge variant="success">Verified</Badge>}
             {log.status === 'flagged' && <Badge variant="destructive">Flagged</Badge>}
             {log.status === 'auto_closed' && <Badge variant="secondary">Auto-closed</Badge>}
+            {showActions && isPending && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); handleVerify(log._id) }}
+                  disabled={actionLoading === log._id}
+                  className="h-7 px-2.5 text-xs"
+                >
+                  <CheckCircle2 className="w-3 h-3 mr-1" /> Verify
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={(e) => { e.stopPropagation(); setFlagDialog({ logId: log._id, open: true }); setFlagNote('') }}
+                  disabled={actionLoading === log._id}
+                  className="h-7 px-2.5 text-xs"
+                >
+                  <XCircle className="w-3 h-3 mr-1" /> Flag
+                </Button>
+              </>
+            )}
           </div>
         </div>
         {isOpen && (
@@ -106,27 +128,6 @@ export default function VerifyTasksPage() {
             {log.verificationNote && (
               <div className="mt-2 p-2.5 bg-orange-50 dark:bg-orange-900/20 rounded text-xs text-orange-700 dark:text-orange-300">
                 <strong>Note:</strong> {log.verificationNote}
-              </div>
-            )}
-            {showActions && log.status === 'submitted' && (
-              <div className="flex gap-2 pt-2">
-                <Button
-                  size="sm"
-                  onClick={() => handleVerify(log._id)}
-                  disabled={actionLoading === log._id}
-                  className="flex-1"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Verify All
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => { setFlagDialog({ logId: log._id, open: true }); setFlagNote('') }}
-                  disabled={actionLoading === log._id}
-                  className="flex-1"
-                >
-                  <XCircle className="w-3.5 h-3.5 mr-1.5" /> Flag
-                </Button>
               </div>
             )}
           </div>

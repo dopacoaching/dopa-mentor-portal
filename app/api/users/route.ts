@@ -6,18 +6,25 @@ import User from '@/models/User'
 import { logAudit } from '@/lib/audit'
 
 export async function GET(request: NextRequest) {
-  const authResult = await requireRole(request, ['admin', 'class_teacher'])
+  const authResult = await requireRole(request, ['admin', 'class_teacher', 'mentor'])
   if (!isAuthResult(authResult)) return authResult
 
   await connectDB()
   const { user } = authResult
   const { searchParams } = new URL(request.url)
-  const role = searchParams.get('role')
+  const roleFilter = searchParams.get('role')
   const region = searchParams.get('region')
+  const activeOnly = searchParams.get('active') === 'true'
+
+  // Non-admins can only query admins (for chat)
+  if (user.role !== 'admin' && roleFilter !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const query: Record<string, unknown> = {}
-  if (role) query.role = role
+  if (roleFilter) query.role = roleFilter
   if (region && user.role === 'admin') query.region = region
+  if (activeOnly) query.isActive = true
 
   const users = await User.find(query).select('-password').sort({ name: 1 })
   return NextResponse.json({ users })

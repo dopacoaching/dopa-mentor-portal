@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, ToggleLeft, ToggleRight, KeyRound } from 'lucide-react'
+import { Plus, Pencil, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,8 +36,11 @@ function UserForm({
   const [region, setRegion] = useState(initial?.region ?? '')
   const [campus, setCampus] = useState(initial?.campus ?? '')
   const [campusOptions, setCampusOptions] = useState<CampusOption[]>([])
-  const [batchName, setBatchName] = useState(initial?.assignedBatches?.[0]?.batchName ?? '')
-  const [batchType, setBatchType] = useState(initial?.assignedBatches?.[0]?.batchType ?? 'residential')
+  const [batches, setBatches] = useState<{ batchName: string; batchType: string }[]>(
+    initial?.assignedBatches?.length
+      ? initial.assignedBatches.map((b) => ({ batchName: b.batchName, batchType: b.batchType }))
+      : [{ batchName: '', batchType: 'residential' }]
+  )
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -59,8 +62,10 @@ function UserForm({
       const payload: Record<string, unknown> = { name, role, region: region || null, campus: campus || null }
       if (!initial) { payload.username = username; payload.password = password }
       if (password && initial) payload.newPassword = password
-      if (role === 'mentor' && batchName) {
-        payload.assignedBatches = [{ batchId: batchName.toLowerCase().replace(/\s+/g, '_'), batchType, batchName }]
+      if (role === 'mentor') {
+        payload.assignedBatches = batches
+          .filter((b) => b.batchName.trim())
+          .map((b) => ({ batchId: b.batchName.toLowerCase().replace(/\s+/g, '_'), batchType: b.batchType, batchName: b.batchName.trim() }))
       }
       await onSave(payload)
       onClose()
@@ -126,22 +131,49 @@ function UserForm({
         </>
       )}
       {role === 'mentor' && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label>Batch Name</Label>
-            <Input value={batchName} onChange={(e) => setBatchName(e.target.value)} placeholder="e.g. NEET 2025 Batch A" />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">Assigned Batches</Label>
+            <button
+              type="button"
+              onClick={() => setBatches((b) => [...b, { batchName: '', batchType: 'residential' }])}
+              className="text-xs text-dopa-green hover:underline flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" /> Add Batch
+            </button>
           </div>
-          <div className="space-y-1.5">
-            <Label>Batch Type</Label>
-            <Select value={batchType} onValueChange={(v) => setBatchType(v as 'residential' | 'online' | 'ig')}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="residential">Residential</SelectItem>
-                <SelectItem value="online">Online</SelectItem>
-                <SelectItem value="ig">Integrated School (IG)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {batches.map((b, i) => (
+            <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-2 items-end">
+              <div className="space-y-1">
+                {i === 0 && <Label className="text-xs">Batch Name</Label>}
+                <Input
+                  value={b.batchName}
+                  onChange={(e) => setBatches((prev) => prev.map((x, j) => j === i ? { ...x, batchName: e.target.value } : x))}
+                  placeholder="e.g. NEET 2025 Batch A"
+                />
+              </div>
+              <div className="space-y-1">
+                {i === 0 && <Label className="text-xs">Type</Label>}
+                <Select value={b.batchType} onValueChange={(v) => setBatches((prev) => prev.map((x, j) => j === i ? { ...x, batchType: v } : x))}>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="residential">Residential</SelectItem>
+                    <SelectItem value="online">Online</SelectItem>
+                    <SelectItem value="ig">Integrated (IG)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {batches.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setBatches((prev) => prev.filter((_, j) => j !== i))}
+                  className={`p-2 rounded hover:bg-red-50 dark:hover:bg-red-950 text-gray-400 hover:text-red-500 ${i === 0 ? 'mt-5' : ''}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
       <DialogFooter>

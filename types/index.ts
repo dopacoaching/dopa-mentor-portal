@@ -233,3 +233,28 @@ export interface UIState {
   sidebarOpen: boolean
   isLoading: boolean
 }
+
+export type MessageType = 'text' | 'image' | 'voice'
+
+export interface IMessage {
+  _id: string
+  conversationId: string
+  senderId: string
+  senderName: string
+  senderRole: string
+  type: MessageType
+  content: string | null
+  fileUrl: string | null
+  fileName: string | null
+  duration: number | null
+  readBy: string[]
+  createdAt: string
+}
+
+export interface IConversation {
+  _id: string
+  partner: { _id: string; name: string; role: string } | null
+  lastMessage: string | null
+  lastMessageAt: string | null
+  unread: number
+}

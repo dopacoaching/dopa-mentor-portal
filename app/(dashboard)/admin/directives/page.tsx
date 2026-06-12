@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Plus, Archive, Pencil } from 'lucide-react'
+import { Plus, Archive, Pencil, ArchiveRestore, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,7 @@ export default function AdminDirectivesPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [editDirective, setEditDirective] = useState<IDirective | null>(null)
   const [form, setForm] = useState({ title: '', content: '', targetScope: 'all', targetRegion: '', targetCampus: '', targetMentorId: '' })
+  const [viewDirective, setViewDirective] = useState<IDirective | null>(null)
   const [saving, setSaving] = useState(false)
 
   const fetchDirectives = useCallback(async () => {
@@ -55,6 +56,16 @@ export default function AdminDirectivesPage() {
     const r = await fetch(`/api/directives/${id}`, { method: 'DELETE' })
     if (r.ok) { toast.success('Directive archived'); await fetchDirectives() }
     else { toast.error('Failed to archive directive') }
+  }
+
+  async function handleRestore(id: string) {
+    const r = await fetch(`/api/directives/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isActive: true }),
+    })
+    if (r.ok) { toast.success('Directive restored'); await fetchDirectives() }
+    else { toast.error('Failed to restore directive') }
   }
 
   const active = directives.filter((d) => d.isActive)
@@ -136,10 +147,13 @@ export default function AdminDirectivesPage() {
                     <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Expires {formatDate(d.expiresAt)}</p>
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => { setEditDirective(d); setForm({ title: d.title, content: d.content, targetScope: d.targetScope, targetRegion: d.targetRegion ?? '', targetCampus: d.targetCampus ?? '', targetMentorId: '' }) }} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300">
+                    <button onClick={() => setViewDirective(d)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300" title="View">
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => { setEditDirective(d); setForm({ title: d.title, content: d.content, targetScope: d.targetScope, targetRegion: d.targetRegion ?? '', targetCampus: d.targetCampus ?? '', targetMentorId: '' }) }} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300" title="Edit">
                       <Pencil className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleArchive(d._id)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300">
+                    <button onClick={() => handleArchive(d._id)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300" title="Archive">
                       <Archive className="w-4 h-4" />
                     </button>
                   </div>
@@ -153,11 +167,41 @@ export default function AdminDirectivesPage() {
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Archived</h2>
           {archived.map((d) => (
-            <div key={d._id} className="border dark:border-slate-700 rounded-xl p-4 opacity-60 bg-gray-50 dark:bg-slate-800">
-              <p className="font-medium text-sm">{d.title}</p>
-              <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{d.targetScope} · {formatDate(d.publishedAt)}</p>
+            <div key={d._id} className="border dark:border-slate-700 rounded-xl p-4 opacity-70 bg-gray-50 dark:bg-slate-800 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{d.title}</p>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{d.targetScope} · Archived {formatDate(d.publishedAt)}</p>
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
+                <button onClick={() => setViewDirective(d)} className="p-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 rounded text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300" title="View">
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button onClick={() => handleRestore(d._id)} className="p-1.5 hover:bg-green-50 dark:hover:bg-green-950 rounded text-gray-400 dark:text-slate-500 hover:text-green-600 dark:hover:text-green-400" title="Restore directive">
+                  <ArchiveRestore className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* View Dialog */}
+      {viewDirective && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setViewDirective(null)}>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full p-6 relative" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setViewDirective(null)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2 mb-3">
+              <Badge variant={viewDirective.isActive ? 'success' : 'secondary'}>{viewDirective.isActive ? 'Active' : 'Archived'}</Badge>
+              <Badge variant="info" className="text-xs">{viewDirective.targetScope === 'all' ? 'All Mentors' : viewDirective.targetRegion || viewDirective.targetCampus || 'Individual'}</Badge>
+            </div>
+            <h2 className="text-xl font-bold mb-2">{viewDirective.title}</h2>
+            <p className="text-xs text-gray-400 dark:text-slate-500 mb-4">
+              Published {formatDate(viewDirective.publishedAt)} · Expires {formatDate(viewDirective.expiresAt)}
+            </p>
+            <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{viewDirective.content}</p>
+          </div>
         </div>
       )}
 

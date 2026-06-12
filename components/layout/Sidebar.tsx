@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, CheckSquare, MapPin, MessageSquare,
-  FileText, DollarSign, BarChart2, Bell, X, BookOpen, Building2, ShieldCheck, ClipboardList,
+  FileText, DollarSign, BarChart2, Bell, X, BookOpen, Building2, ShieldCheck, ClipboardList, MessageCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
@@ -27,18 +27,21 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Reports', href: '/admin/reports', icon: BarChart2, roles: ['admin'] },
   { label: 'Campuses', href: '/admin/campuses', icon: Building2, roles: ['admin'] },
   { label: 'Audit Log', href: '/admin/audit', icon: ShieldCheck, roles: ['admin'] },
+  { label: 'Chat', href: '/chat', icon: MessageCircle, roles: ['admin'] },
 
   { label: 'Dashboard', href: '/class-teacher', icon: LayoutDashboard, roles: ['class_teacher'] },
   { label: 'Mentor Tasks', href: '/class-teacher/tasks', icon: ClipboardList, roles: ['class_teacher'] },
   { label: 'Verify Tasks', href: '/class-teacher/verify', icon: CheckSquare, roles: ['class_teacher'] },
   { label: 'Visits', href: '/class-teacher/visits', icon: MapPin, roles: ['class_teacher'] },
   { label: 'CT Reviews', href: '/class-teacher/reviews', icon: FileText, roles: ['class_teacher'] },
+  { label: 'Chat', href: '/chat', icon: MessageCircle, roles: ['class_teacher'] },
 
   { label: 'Dashboard', href: '/mentor', icon: LayoutDashboard, roles: ['mentor'] },
   { label: 'Daily Tasks', href: '/mentor/tasks', icon: CheckSquare, roles: ['mentor'] },
   { label: 'Doubt Web', href: '/mentor/doubts', icon: MessageSquare, roles: ['mentor'] },
   { label: 'Visits', href: '/mentor/visits', icon: MapPin, roles: ['mentor'] },
   { label: 'Directives', href: '/mentor/directives', icon: BookOpen, roles: ['mentor'] },
+  { label: 'Chat', href: '/chat', icon: MessageCircle, roles: ['mentor'] },
 ]
 
 export default function Sidebar() {

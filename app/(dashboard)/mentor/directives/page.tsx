@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
 import type { IDirective } from '@/types'
 
@@ -10,6 +11,7 @@ export default function MentorDirectivesPage() {
   const [directives, setDirectives] = useState<IDirective[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [viewDirective, setViewDirective] = useState<IDirective | null>(null)
 
   useEffect(() => {
     fetch('/api/directives')
@@ -49,14 +51,34 @@ export default function MentorDirectivesPage() {
           {directives.map((d) => (
             <Card key={d._id}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">{d.title}</CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base">{d.title}</CardTitle>
+                  <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs flex-shrink-0" onClick={() => setViewDirective(d)}>
+                    View
+                  </Button>
+                </div>
                 <p className="text-xs text-gray-400 dark:text-slate-500">Published {formatDate(d.publishedAt)} · Expires {formatDate(d.expiresAt)}</p>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap">{d.content}</p>
+                <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap line-clamp-3">{d.content}</p>
               </CardContent>
             </Card>
           ))}
+
+          {/* View detail modal */}
+          {viewDirective && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setViewDirective(null)}>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => setViewDirective(null)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mb-1">Monthly Directive</p>
+                <h2 className="text-xl font-bold mb-1">{viewDirective.title}</h2>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mb-4">Active until {formatDate(viewDirective.expiresAt)}</p>
+                <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{viewDirective.content}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

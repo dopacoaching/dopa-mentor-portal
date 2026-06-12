@@ -39,6 +39,11 @@ export function useNotifications() {
         } catch {}
       })
 
+      es.addEventListener('chat_message', (e) => {
+        // Dispatch to a window event so the chat page can pick it up
+        window.dispatchEvent(new MessageEvent('chat_message', { data: e.data }))
+      })
+
       es.onerror = () => {
         es.close()
         esRef.current = null
