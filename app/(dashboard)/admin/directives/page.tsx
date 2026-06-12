@@ -193,23 +193,29 @@ export default function AdminDirectivesPage() {
       {/* View Dialog */}
       {viewDirective && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setViewDirective(null)}>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full p-6 relative" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setViewDirective(null)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
-              <X className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2 mb-3">
-              <Badge variant={viewDirective.isActive ? 'success' : 'secondary'}>{viewDirective.isActive ? 'Active' : 'Archived'}</Badge>
-              <Badge variant="info" className="text-xs">{
-                viewDirective.targetScope === 'all' ? 'All Mentors' :
-                viewDirective.targetScope === 'regional_head' ? 'Regional Heads' :
-                viewDirective.targetRegion || viewDirective.targetCampus || 'Individual'
-              }</Badge>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3 p-6 pb-3 border-b dark:border-slate-700 flex-shrink-0">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant={viewDirective.isActive ? 'success' : 'secondary'}>{viewDirective.isActive ? 'Active' : 'Archived'}</Badge>
+                  <Badge variant="info" className="text-xs">{
+                    viewDirective.targetScope === 'all' ? 'All Mentors' :
+                    viewDirective.targetScope === 'regional_head' ? 'Regional Heads' :
+                    viewDirective.targetRegion || viewDirective.targetCampus || 'Individual'
+                  }</Badge>
+                </div>
+                <h2 className="text-xl font-bold">{viewDirective.title}</h2>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                  Published {formatDate(viewDirective.publishedAt)} · Expires {formatDate(viewDirective.expiresAt)}
+                </p>
+              </div>
+              <button onClick={() => setViewDirective(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0 mt-1">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <h2 className="text-xl font-bold mb-2">{viewDirective.title}</h2>
-            <p className="text-xs text-gray-400 dark:text-slate-500 mb-4">
-              Published {formatDate(viewDirective.publishedAt)} · Expires {formatDate(viewDirective.expiresAt)}
-            </p>
-            <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{viewDirective.content}</p>
+            <div className="overflow-y-auto p-6 pt-4">
+              <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{viewDirective.content}</p>
+            </div>
           </div>
         </div>
       )}

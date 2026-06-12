@@ -68,14 +68,20 @@ export default function MentorDirectivesPage() {
           {/* View detail modal */}
           {viewDirective && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setViewDirective(null)}>
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full p-6 relative max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => setViewDirective(null)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
-                  <X className="w-5 h-5" />
-                </button>
-                <p className="text-xs text-gray-400 dark:text-slate-500 mb-1">Monthly Directive</p>
-                <h2 className="text-xl font-bold mb-1">{viewDirective.title}</h2>
-                <p className="text-xs text-gray-400 dark:text-slate-500 mb-4">Active until {formatDate(viewDirective.expiresAt)}</p>
-                <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{viewDirective.content}</p>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between gap-3 p-6 pb-3 border-b dark:border-slate-700 flex-shrink-0">
+                  <div>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mb-0.5">Monthly Directive</p>
+                    <h2 className="text-xl font-bold">{viewDirective.title}</h2>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Active until {formatDate(viewDirective.expiresAt)}</p>
+                  </div>
+                  <button onClick={() => setViewDirective(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0 mt-1">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto p-6 pt-4">
+                  <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{viewDirective.content}</p>
+                </div>
               </div>
             </div>
           )}
