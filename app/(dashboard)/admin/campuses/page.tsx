@@ -169,7 +169,7 @@ export default function CampusesPage() {
 
   const grouped = REGIONS.map((r) => ({
     ...r,
-    campuses: campuses.filter((c) => c.region === r.value),
+    campuses: campuses.filter((c) => c.region?.toLowerCase() === r.value.toLowerCase()),
   }))
 
   return (

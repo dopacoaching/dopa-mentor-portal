@@ -11,10 +11,21 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const region = searchParams.get('region')
 
-  const query: Record<string, unknown> = { isActive: { $ne: false } }
-  if (region) query.region = region
+  const REGION_CANONICAL: Record<string, string> = {
+    calicut: 'Calicut', kottakkal: 'Kottakkal', thrissur: 'Thrissur', ig: 'IG',
+  }
 
-  const campuses = await Campus.find(query).sort({ name: 1 })
+  const query: Record<string, unknown> = { isActive: { $ne: false } }
+  if (region) query.region = { $regex: new RegExp(`^${region}$`, 'i') }
+
+  const raw = await Campus.find(query).sort({ name: 1 }).lean()
+
+  // Normalize legacy lowercase region values to canonical casing
+  const campuses = raw.map((c) => ({
+    ...c,
+    region: REGION_CANONICAL[c.region?.toLowerCase()] ?? c.region,
+  }))
+
   return NextResponse.json({ campuses })
 }
 
