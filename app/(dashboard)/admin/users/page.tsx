@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Plus, Pencil, ToggleLeft, ToggleRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -183,17 +183,29 @@ function UserForm({
   )
 }
 
+const SORT_OPTIONS = [
+  { value: 'name',   label: 'Name (A–Z)' },
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'role',   label: 'By role' },
+  { value: 'campus', label: 'By campus' },
+]
+
 export default function UsersPage() {
   const [users, setUsers] = useState<IUser[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [editUser, setEditUser] = useState<IUser | null>(null)
-
+  const [filterRole, setFilterRole] = useState('all')
+  const [sort, setSort] = useState('name')
   const [error, setError] = useState(false)
 
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
+    setLoading(true)
     try {
-      const r = await fetch('/api/users')
+      const params = new URLSearchParams({ sort })
+      if (filterRole !== 'all') params.set('role', filterRole)
+      const r = await fetch(`/api/users?${params}`)
       if (!r.ok) throw new Error()
       const d = await r.json()
       setUsers(d.users ?? [])
@@ -202,9 +214,9 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterRole, sort])
 
-  useEffect(() => { fetchUsers() }, [])
+  useEffect(() => { fetchUsers() }, [fetchUsers])
 
   async function handleCreate(data: Record<string, unknown>) {
     const r = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
@@ -240,6 +252,23 @@ export default function UsersPage() {
         </Button>
       </div>
 
+      {/* Filters & sort */}
+      <div className="flex flex-wrap gap-3">
+        <Select value={filterRole} onValueChange={(v) => { setFilterRole(v) }}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="All roles" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All roles</SelectItem>
+            {ROLES.map((r) => <SelectItem key={r} value={r}>{roleLabel(r)}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={sort} onValueChange={setSort}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Sort by" /></SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
       {error ? (
         <div className="py-20 text-center text-red-500">Failed to load users. Please refresh.</div>
       ) : loading ? (
@@ -255,6 +284,7 @@ export default function UsersPage() {
                   <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Region</th>
                   <th className="px-4 py-3">Campus</th>
+                  <th className="px-4 py-3">Batches</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Actions</th>
                 </tr>
@@ -269,6 +299,17 @@ export default function UsersPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500 dark:text-slate-400 capitalize">{u.region ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-500 dark:text-slate-400">{u.campus ?? '—'}</td>
+                    <td className="px-4 py-3">
+                      {u.assignedBatches?.length ? (
+                        <div className="flex flex-wrap gap-1">
+                          {u.assignedBatches.map((b) => (
+                            <span key={b.batchId} className="inline-block text-xs bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded px-1.5 py-0.5 whitespace-nowrap">
+                              {b.batchName}
+                            </span>
+                          ))}
+                        </div>
+                      ) : <span className="text-gray-300 dark:text-slate-700">—</span>}
+                    </td>
                     <td className="px-4 py-3">
                       <Badge variant={u.isActive ? 'success' : 'destructive'}>{u.isActive ? 'Active' : 'Inactive'}</Badge>
                     </td>

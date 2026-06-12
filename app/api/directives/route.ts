@@ -27,6 +27,11 @@ export async function GET(request: NextRequest) {
       { targetScope: 'campus', targetCampus: me?.campus },
       { targetScope: 'individual', targetMentorId: user.userId },
     ]
+  } else if (user.role === 'regional_head') {
+    query.$or = [
+      { targetScope: 'all' },
+      { targetScope: 'regional_head' },
+    ]
   }
 
   const directives = await Directive.find(query)
@@ -46,6 +51,9 @@ export async function POST(request: NextRequest) {
 
   if (!title || !content || !targetScope) {
     return NextResponse.json({ error: 'title, content, targetScope required' }, { status: 400 })
+  }
+  if (!['all', 'region', 'campus', 'individual', 'regional_head'].includes(targetScope)) {
+    return NextResponse.json({ error: 'Invalid targetScope' }, { status: 400 })
   }
   if (targetScope === 'region' && !targetRegion) {
     return NextResponse.json({ error: 'targetRegion required when scope is region' }, { status: 400 })
@@ -73,23 +81,27 @@ export async function POST(request: NextRequest) {
     publishedAt: now,
   })
 
-  let mentorQuery: Record<string, unknown> = { role: 'mentor', isActive: true }
-  if (targetScope === 'region' && targetRegion) mentorQuery.region = targetRegion
-  if (targetScope === 'campus' && targetCampus) mentorQuery.campus = targetCampus
-  if (targetScope === 'individual' && targetMentorId) mentorQuery._id = targetMentorId
-
-  if (targetScope !== 'individual' || targetMentorId) {
-    const mentors = await User.find(mentorQuery).select('_id')
-    await Promise.all(mentors.map(async (m) => {
-      const notif = await Notification.create({
-        recipientId: m._id,
-        type: 'directive_published',
-        message: `New directive: ${title}`,
-        relatedId: directive._id,
-      })
-      sendToUser(m._id.toString(), { type: 'notification', data: notif.toObject() })
-    }))
+  // Build recipient query based on scope
+  let recipientQuery: Record<string, unknown>
+  if (targetScope === 'regional_head') {
+    recipientQuery = { role: 'regional_head', isActive: true }
+  } else {
+    recipientQuery = { role: 'mentor', isActive: true }
+    if (targetScope === 'region' && targetRegion) recipientQuery.region = targetRegion
+    if (targetScope === 'campus' && targetCampus) recipientQuery.campus = targetCampus
+    if (targetScope === 'individual' && targetMentorId) recipientQuery._id = targetMentorId
   }
+
+  const recipients = await User.find(recipientQuery).select('_id')
+  await Promise.all(recipients.map(async (r) => {
+    const notif = await Notification.create({
+      recipientId: r._id,
+      type: 'directive_published',
+      message: `New directive: ${title}`,
+      relatedId: directive._id,
+    })
+    sendToUser(r._id.toString(), { type: 'notification', data: notif.toObject() })
+  }))
 
   logAudit({ user: authResult.user, action: 'directive.create', targetType: 'Directive', targetId: directive._id.toString(), details: { title, targetScope }, request })
 

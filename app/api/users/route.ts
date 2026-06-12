@@ -16,6 +16,16 @@ export async function GET(request: NextRequest) {
   const regionParam = searchParams.get('region')
   const activeOnly = searchParams.get('active') === 'true'
 
+  const sortParam = searchParams.get('sort') ?? 'name'
+  const SORT_MAP: Record<string, Record<string, 1 | -1>> = {
+    name:    { name: 1 },
+    newest:  { createdAt: -1 },
+    oldest:  { createdAt: 1 },
+    role:    { role: 1, name: 1 },
+    campus:  { campus: 1, name: 1 },
+  }
+  const sortOrder = SORT_MAP[sortParam] ?? SORT_MAP.name
+
   const query: Record<string, unknown> = {}
 
   if (user.role === 'admin') {
@@ -25,13 +35,24 @@ export async function GET(request: NextRequest) {
     if (roleFilter === 'admin') {
       query.role = 'admin'
     } else {
-      // Show class teachers in their own region
+      // Show class_teachers and mentors in their own region
       const me = await User.findById(user.userId).select('region').lean()
-      query.role = 'class_teacher'
+      query.role = roleFilter === 'mentor' ? 'mentor' : 'class_teacher'
       if (me?.region) query.region = me.region
     }
+  } else if (user.role === 'class_teacher') {
+    if (roleFilter === 'mentor') {
+      // CTs may browse mentors in their campus
+      const me = await User.findById(user.userId).select('campus').lean()
+      query.role = 'mentor'
+      if (me?.campus) query.campus = me.campus
+    } else if (roleFilter === 'admin') {
+      query.role = 'admin'
+    } else {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
   } else {
-    // mentor, class_teacher: only admins (for chat)
+    // mentor: only admins (for chat)
     if (roleFilter !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -40,7 +61,7 @@ export async function GET(request: NextRequest) {
 
   if (activeOnly) query.isActive = true
 
-  const users = await User.find(query).select('-password').sort({ name: 1 })
+  const users = await User.find(query).select('-password').sort(sortOrder)
   return NextResponse.json({ users })
 }
 

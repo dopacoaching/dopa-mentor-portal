@@ -84,12 +84,13 @@ export default function AdminDirectivesPage() {
         </div>
         <div className="space-y-1.5">
           <Label>Target Scope</Label>
-          <Select value={form.targetScope} onValueChange={(v) => setForm((f) => ({ ...f, targetScope: v, targetRegion: '', targetCampus: '' }))}>
+          <Select value={form.targetScope} onValueChange={(v) => setForm((f) => ({ ...f, targetScope: v, targetRegion: '', targetCampus: '', targetMentorId: '' }))}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Mentors</SelectItem>
-              <SelectItem value="region">By Region</SelectItem>
-              <SelectItem value="campus">By Campus</SelectItem>
+              <SelectItem value="regional_head">All Regional Heads</SelectItem>
+              <SelectItem value="region">Mentors — By Region</SelectItem>
+              <SelectItem value="campus">Mentors — By Campus</SelectItem>
               <SelectItem value="individual">Individual Mentor</SelectItem>
             </SelectContent>
           </Select>
@@ -141,7 +142,11 @@ export default function AdminDirectivesPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-semibold">{d.title}</p>
-                      <Badge variant="info" className="text-xs">{d.targetScope === 'all' ? 'All' : d.targetRegion || d.targetCampus || 'Individual'}</Badge>
+                      <Badge variant="info" className="text-xs">{
+                        d.targetScope === 'all' ? 'All Mentors' :
+                        d.targetScope === 'regional_head' ? 'Regional Heads' :
+                        d.targetRegion || d.targetCampus || 'Individual'
+                      }</Badge>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-slate-400 line-clamp-2">{d.content}</p>
                     <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Expires {formatDate(d.expiresAt)}</p>
@@ -194,7 +199,11 @@ export default function AdminDirectivesPage() {
             </button>
             <div className="flex items-center gap-2 mb-3">
               <Badge variant={viewDirective.isActive ? 'success' : 'secondary'}>{viewDirective.isActive ? 'Active' : 'Archived'}</Badge>
-              <Badge variant="info" className="text-xs">{viewDirective.targetScope === 'all' ? 'All Mentors' : viewDirective.targetRegion || viewDirective.targetCampus || 'Individual'}</Badge>
+              <Badge variant="info" className="text-xs">{
+                viewDirective.targetScope === 'all' ? 'All Mentors' :
+                viewDirective.targetScope === 'regional_head' ? 'Regional Heads' :
+                viewDirective.targetRegion || viewDirective.targetCampus || 'Individual'
+              }</Badge>
             </div>
             <h2 className="text-xl font-bold mb-2">{viewDirective.title}</h2>
             <p className="text-xs text-gray-400 dark:text-slate-500 mb-4">

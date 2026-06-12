@@ -4,7 +4,7 @@ export interface IDirectiveDocument extends Document {
   title: string
   content: string
   publishedBy: mongoose.Types.ObjectId
-  targetScope: 'all' | 'region' | 'campus' | 'individual'
+  targetScope: 'all' | 'region' | 'campus' | 'individual' | 'regional_head'
   targetRegion: string | null
   targetCampus: string | null
   targetMentorId: mongoose.Types.ObjectId | null
@@ -21,7 +21,7 @@ const directiveSchema = new Schema<IDirectiveDocument>(
     title: { type: String, required: true, trim: true },
     content: { type: String, required: true },
     publishedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    targetScope: { type: String, enum: ['all', 'region', 'campus', 'individual'], required: true },
+    targetScope: { type: String, enum: ['all', 'region', 'campus', 'individual', 'regional_head'], required: true },
     targetRegion: { type: String, default: null },
     targetCampus: { type: String, default: null },
     targetMentorId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
