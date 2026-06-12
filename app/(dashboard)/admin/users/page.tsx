@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react'
+import { Plus, Pencil, ToggleLeft, ToggleRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,7 +18,8 @@ const REGIONS = ['calicut', 'kottakkal', 'thrissur', 'ig']
 const REGIONS_LABELS: Record<string, string> = { calicut: 'Calicut', kottakkal: 'Kottakkal', thrissur: 'Thrissur', ig: 'Integrated School (IG)' }
 const ROLES = ['admin', 'class_teacher', 'mentor', 'regional_head']
 
-interface CampusOption { _id: string; name: string; region: string }
+interface CampusBatch { batchId: string; batchName: string; batchType: string }
+interface CampusOption { _id: string; name: string; region: string; batches: CampusBatch[] }
 
 function UserForm({
   initial,
@@ -36,10 +37,8 @@ function UserForm({
   const [region, setRegion] = useState(initial?.region ?? '')
   const [campus, setCampus] = useState(initial?.campus ?? '')
   const [campusOptions, setCampusOptions] = useState<CampusOption[]>([])
-  const [batches, setBatches] = useState<{ batchName: string; batchType: string }[]>(
-    initial?.assignedBatches?.length
-      ? initial.assignedBatches.map((b) => ({ batchName: b.batchName, batchType: b.batchType }))
-      : [{ batchName: '', batchType: 'residential' }]
+  const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>(
+    initial?.assignedBatches?.map((b) => b.batchId) ?? []
   )
   const [saving, setSaving] = useState(false)
 
@@ -50,9 +49,24 @@ function UserForm({
       .then((d) => setCampusOptions(d.campuses ?? []))
   }, [region])
 
+  // Batches available from the selected campus
+  const availableBatches = campusOptions.find((c) => c.name === campus)?.batches ?? []
+
+  function toggleBatch(batchId: string) {
+    setSelectedBatchIds((prev) =>
+      prev.includes(batchId) ? prev.filter((id) => id !== batchId) : [...prev, batchId]
+    )
+  }
+
   function handleRegionChange(v: string) {
     setRegion(v)
     setCampus('')
+    setSelectedBatchIds([])
+  }
+
+  function handleCampusChange(v: string) {
+    setCampus(v)
+    setSelectedBatchIds([])
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -63,9 +77,7 @@ function UserForm({
       if (!initial) { payload.username = username; payload.password = password }
       if (password && initial) payload.newPassword = password
       if (role === 'mentor' || role === 'class_teacher') {
-        payload.assignedBatches = batches
-          .filter((b) => b.batchName.trim())
-          .map((b) => ({ batchId: b.batchName.toLowerCase().replace(/\s+/g, '_'), batchType: b.batchType, batchName: b.batchName.trim() }))
+        payload.assignedBatches = availableBatches.filter((b) => selectedBatchIds.includes(b.batchId))
       }
       await onSave(payload)
       onClose()
@@ -96,7 +108,7 @@ function UserForm({
         </div>
         <div className="space-y-1.5">
           <Label>Role *</Label>
-          <Select value={role} onValueChange={(v) => { setRole(v as IUser['role']); setRegion(''); setCampus('') }}>
+          <Select value={role} onValueChange={(v) => { setRole(v as IUser['role']); setRegion(''); setCampus(''); setSelectedBatchIds([]) }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {ROLES.map((r) => <SelectItem key={r} value={r}>{roleLabel(r)}</SelectItem>)}
@@ -118,7 +130,7 @@ function UserForm({
       {needsCampus && (
         <div className="space-y-1.5">
           <Label>Campus *</Label>
-          <Select value={campus} onValueChange={setCampus} disabled={!region}>
+          <Select value={campus} onValueChange={handleCampusChange} disabled={!region}>
             <SelectTrigger>
               <SelectValue placeholder={!region ? 'Select region first' : campusOptions.length === 0 ? 'No campuses — add in Campus settings' : 'Select campus'} />
             </SelectTrigger>
@@ -131,50 +143,36 @@ function UserForm({
           )}
         </div>
       )}
-      {(role === 'mentor' || role === 'class_teacher') && (
+      {needsCampus && campus && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold">Assigned Batches</Label>
-            <button
-              type="button"
-              onClick={() => setBatches((b) => [...b, { batchName: '', batchType: 'residential' }])}
-              className="text-xs text-dopa-green hover:underline flex items-center gap-1"
-            >
-              <Plus className="w-3 h-3" /> Add Batch
-            </button>
-          </div>
-          {batches.map((b, i) => (
-            <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-2 items-end">
-              <div className="space-y-1">
-                {i === 0 && <Label className="text-xs">Batch Name</Label>}
-                <Input
-                  value={b.batchName}
-                  onChange={(e) => setBatches((prev) => prev.map((x, j) => j === i ? { ...x, batchName: e.target.value } : x))}
-                  placeholder="e.g. NEET 2025 Batch A"
-                />
-              </div>
-              <div className="space-y-1">
-                {i === 0 && <Label className="text-xs">Type</Label>}
-                <Select value={b.batchType} onValueChange={(v) => setBatches((prev) => prev.map((x, j) => j === i ? { ...x, batchType: v } : x))}>
-                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="residential">Residential</SelectItem>
-                    <SelectItem value="online">Online</SelectItem>
-                    <SelectItem value="ig">Integrated (IG)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {batches.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setBatches((prev) => prev.filter((_, j) => j !== i))}
-                  className={`p-2 rounded hover:bg-red-50 dark:hover:bg-red-950 text-gray-400 hover:text-red-500 ${i === 0 ? 'mt-5' : ''}`}
+          <Label className="text-sm font-semibold">Assigned Batches</Label>
+          {availableBatches.length === 0 ? (
+            <p className="text-xs text-amber-600">No batches defined for this campus. Add them in <strong>Campuses</strong> settings first.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {availableBatches.map((b) => (
+                <label
+                  key={b.batchId}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${
+                    selectedBatchIds.includes(b.batchId)
+                      ? 'border-dopa-green bg-dopa-green/5 dark:bg-dopa-green/10'
+                      : 'border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600'
+                  }`}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
+                  <input
+                    type="checkbox"
+                    className="accent-dopa-green"
+                    checked={selectedBatchIds.includes(b.batchId)}
+                    onChange={() => toggleBatch(b.batchId)}
+                  />
+                  <span className="flex-1 min-w-0">
+                    <span className="block font-medium truncate">{b.batchName}</span>
+                    <span className="text-xs text-gray-400 dark:text-slate-500 capitalize">{b.batchType}</span>
+                  </span>
+                </label>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
       <DialogFooter>
