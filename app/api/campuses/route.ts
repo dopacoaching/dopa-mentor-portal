@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   if (!isAuthResult(authResult)) return authResult
 
   await connectDB()
-  const { name, region } = await request.json()
+  const { name, region, batches } = await request.json()
 
   if (!name || !region) {
     return NextResponse.json({ error: 'name and region are required' }, { status: 400 })
@@ -34,6 +34,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Campus already exists in this region' }, { status: 409 })
   }
 
-  const campus = await Campus.create({ name: name.trim(), region })
+  const normalizedBatches = (batches ?? [])
+    .filter((b: { batchName?: string; batchType?: string }) => b.batchName?.trim())
+    .map((b: { batchName: string; batchType: string }) => ({
+      batchId: b.batchName.trim().toLowerCase().replace(/\s+/g, '_'),
+      batchName: b.batchName.trim(),
+      batchType: b.batchType || 'residential',
+    }))
+
+  const campus = await Campus.create({ name: name.trim(), region, batches: normalizedBatches })
   return NextResponse.json({ campus }, { status: 201 })
 }

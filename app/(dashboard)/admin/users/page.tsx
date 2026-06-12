@@ -62,7 +62,7 @@ function UserForm({
       const payload: Record<string, unknown> = { name, role, region: region || null, campus: campus || null }
       if (!initial) { payload.username = username; payload.password = password }
       if (password && initial) payload.newPassword = password
-      if (role === 'mentor') {
+      if (role === 'mentor' || role === 'class_teacher') {
         payload.assignedBatches = batches
           .filter((b) => b.batchName.trim())
           .map((b) => ({ batchId: b.batchName.toLowerCase().replace(/\s+/g, '_'), batchType: b.batchType, batchName: b.batchName.trim() }))
@@ -131,7 +131,7 @@ function UserForm({
           )}
         </div>
       )}
-      {role === 'mentor' && (
+      {(role === 'mentor' || role === 'class_teacher') && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-semibold">Assigned Batches</Label>
