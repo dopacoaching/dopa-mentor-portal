@@ -160,7 +160,7 @@ export interface ICTVisitReview {
   createdAt: string
 }
 
-export type DirectiveScope = 'all' | 'region' | 'campus' | 'individual'
+export type DirectiveScope = 'all' | 'region' | 'campus' | 'individual' | 'regional_head'
 
 export interface IDirective {
   _id: string
