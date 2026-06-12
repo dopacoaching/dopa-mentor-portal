@@ -16,6 +16,15 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get('userId')
   const userRole = searchParams.get('userRole')
   const search = searchParams.get('search')
+  const sortParam = searchParams.get('sort') ?? 'newest'
+
+  const SORT_MAP: Record<string, Record<string, 1 | -1>> = {
+    newest:   { createdAt: -1 },
+    oldest:   { createdAt: 1 },
+    user:     { userName: 1, createdAt: -1 },
+    action:   { action: 1, createdAt: -1 },
+  }
+  const sortOrder = SORT_MAP[sortParam] ?? SORT_MAP.newest
 
   const query: Record<string, unknown> = {}
   if (action) query.action = action
@@ -25,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   const [logs, total] = await Promise.all([
     AuditLog.find(query)
-      .sort({ createdAt: -1 })
+      .sort(sortOrder)
       .skip((page - 1) * limit)
       .limit(limit)
       .lean(),

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Search, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, RefreshCw, ArrowUpDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -40,10 +40,18 @@ const ACTION_LABELS: Record<string, string> = {
   'directive.archive': 'Archived directive',
 }
 
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'user',   label: 'By user name' },
+  { value: 'action', label: 'By action' },
+]
+
 const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
   class_teacher: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   mentor: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  regional_head: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
 }
 
 const ACTION_COLORS: Record<string, string> = {
@@ -68,8 +76,23 @@ function getActionColor(action: string) {
   return ACTION_COLORS[verb] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
 }
 
+// Fields shown inline as dedicated columns — excluded from the details chips
+const COLUMN_FIELDS = new Set(['batchId', 'batchName'])
+
+function BatchCell({ details }: { details: Record<string, unknown> }) {
+  const batch = (details.batchName ?? details.batchId) as string | undefined
+  if (!batch) return <span className="text-gray-300 dark:text-slate-700">—</span>
+  return (
+    <span className="inline-block text-xs bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded px-2 py-0.5 font-medium max-w-[140px] truncate" title={batch}>
+      {batch}
+    </span>
+  )
+}
+
 function DetailsCell({ details }: { details: Record<string, unknown> }) {
-  const entries = Object.entries(details).filter(([, v]) => v !== null && v !== undefined && v !== '')
+  const entries = Object.entries(details).filter(
+    ([k, v]) => !COLUMN_FIELDS.has(k) && v !== null && v !== undefined && v !== ''
+  )
   if (entries.length === 0) return <span className="text-gray-400 dark:text-slate-600">—</span>
   return (
     <div className="flex flex-wrap gap-1">
@@ -92,11 +115,12 @@ export default function AuditPage() {
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState('all')
   const [filterAction, setFilterAction] = useState('all')
+  const [sort, setSort] = useState('newest')
 
   const fetchLogs = useCallback(async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ page: String(page), limit: '50' })
+      const params = new URLSearchParams({ page: String(page), limit: '50', sort })
       if (search) params.set('search', search)
       if (filterRole !== 'all') params.set('userRole', filterRole)
       if (filterAction !== 'all') params.set('action', filterAction)
@@ -108,11 +132,10 @@ export default function AuditPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, search, filterRole, filterAction])
+  }, [page, search, filterRole, filterAction, sort])
 
   useEffect(() => { fetchLogs() }, [fetchLogs])
-
-  useEffect(() => { setPage(1) }, [search, filterRole, filterAction])
+  useEffect(() => { setPage(1) }, [search, filterRole, filterAction, sort])
 
   return (
     <div className="space-y-5">
@@ -146,6 +169,7 @@ export default function AuditPage() {
             <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="class_teacher">Class Teacher</SelectItem>
             <SelectItem value="mentor">Mentor</SelectItem>
+            <SelectItem value="regional_head">Regional Head</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterAction} onValueChange={setFilterAction}>
@@ -159,6 +183,17 @@ export default function AuditPage() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={sort} onValueChange={setSort}>
+          <SelectTrigger className="w-44">
+            <ArrowUpDown className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="border dark:border-slate-700 rounded-xl overflow-hidden">
@@ -168,6 +203,7 @@ export default function AuditPage() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-slate-400">User</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-slate-400">Action</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-slate-400">Batch</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-slate-400 hidden lg:table-cell">Details</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-slate-400">Time</th>
               </tr>
@@ -176,14 +212,14 @@ export default function AuditPage() {
               {loading ? (
                 [...Array(8)].map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={4} className="px-4 py-3">
+                    <td colSpan={5} className="px-4 py-3">
                       <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded animate-pulse" />
                     </td>
                   </tr>
                 ))
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400 dark:text-slate-500">
+                  <td colSpan={5} className="px-4 py-12 text-center text-gray-400 dark:text-slate-500">
                     No audit events found
                   </td>
                 </tr>
@@ -191,19 +227,18 @@ export default function AuditPage() {
                 logs.map((log) => (
                   <tr key={log._id} className="hover:bg-gray-50 dark:hover:bg-slate-800/30">
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <p className="font-medium text-sm">{log.userName}</p>
-                          <span className={`inline-block text-xs px-1.5 py-0.5 rounded font-medium mt-0.5 ${ROLE_COLORS[log.userRole] ?? ''}`}>
-                            {log.userRole.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </div>
+                      <p className="font-medium text-sm">{log.userName}</p>
+                      <span className={`inline-block text-xs px-1.5 py-0.5 rounded font-medium mt-0.5 ${ROLE_COLORS[log.userRole] ?? 'bg-gray-100 text-gray-600'}`}>
+                        {log.userRole.replace('_', ' ')}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-block text-xs px-2 py-0.5 rounded font-medium ${getActionColor(log.action)}`}>
                         {ACTION_LABELS[log.action] ?? log.action}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <BatchCell details={log.details} />
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
                       <DetailsCell details={log.details} />
@@ -221,7 +256,7 @@ export default function AuditPage() {
         {pages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t dark:border-slate-700 bg-gray-50 dark:bg-slate-800/30">
             <span className="text-xs text-gray-500 dark:text-slate-400">
-              Page {page} of {pages}
+              Page {page} of {pages} · {total.toLocaleString()} total
             </span>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setPage((p) => p - 1)} disabled={page <= 1 || loading}>
