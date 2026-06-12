@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
   let closed = 0
   for (const log of pendingLogs) {
-    const hasIncomplete = log.tasks.some((t) => !t.completed)
+    const hasIncomplete = log.tasks.some((t) => !t.completed && !t.omitted)
     if (hasIncomplete) {
       log.status = 'auto_closed'
       log.autoClosedAt = now
