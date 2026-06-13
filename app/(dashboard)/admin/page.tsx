@@ -14,7 +14,7 @@ interface DashboardData {
   activeClassTeachers: number
   todayTaskCompletion: { completed: number; total: number }
   pendingVerifications: number
-  missedToday: { mentorName: string; campus: string; batchId: string; tasksCompleted: number }[]
+  missedToday: { mentorName: string; campus: string; batchId: string; tasksCompleted: number; tasksActive: number }[]
   pendingVerificationList: { mentorName: string; date: string; hoursSince: number; batchId: string }[]
   upcomingVisits: { visitDate: string; mentorName: string; campus: string; visitType: string }[]
   doubtSummary: { physics: number; chemistry: number; biology: number; mathematics: number; general: number; total: number }
