@@ -107,7 +107,7 @@ export default function AdminDashboard() {
                       <p className="font-medium">{m.mentorName}</p>
                       <p className="text-xs text-gray-400 dark:text-slate-500">{m.campus} · {m.batchId}</p>
                     </div>
-                    <Badge variant="destructive">{9 - m.tasksCompleted} missed</Badge>
+                    <Badge variant="destructive">{m.tasksActive - m.tasksCompleted} missed</Badge>
                   </div>
                 ))}
               </div>

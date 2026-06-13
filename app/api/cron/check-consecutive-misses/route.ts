@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   await connectDB()
   const now = new Date()
   const cutoff = new Date(now.getTime() - 4 * 86400000)
-  const mentors = await User.find({ role: 'mentor', isActive: true }).select('_id name region')
+  const mentors = await User.find({ role: 'mentor', isActive: { $ne: false } }).select('_id name region')
   const mentorIds = mentors.map((m) => m._id)
 
   const allLogs = await TaskLog.find({
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Fetch admins once so we can create stored notifications for them
-  const admins = await User.find({ role: 'admin', isActive: true }).select('_id').lean()
+  const admins = await User.find({ role: 'admin', isActive: { $ne: false } }).select('_id').lean()
 
   let flagged = 0
   for (const mentor of mentors) {

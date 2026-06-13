@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
     upcomingVisits,
     doubtLogs,
   ] = await Promise.all([
-    User.countDocuments({ role: 'mentor', isActive: true }),
-    User.countDocuments({ role: 'class_teacher', isActive: true }),
+    User.countDocuments({ role: 'mentor', isActive: { $ne: false } }),
+    User.countDocuments({ role: 'class_teacher', isActive: { $ne: false } }),
     TaskLog.find({ date: { $gte: todayStart, $lte: todayEnd } }).populate('mentorId', 'name campus assignedBatches'),
     TaskLog.find({ status: 'submitted', date: { $lt: now } }).populate('mentorId', 'name assignedBatches').sort({ createdAt: 1 }).limit(50),
     Visit.find({ visitDate: { $gte: now, $lte: sevenDaysLater }, status: { $in: ['scheduled', 'confirmed'] } })
@@ -41,16 +41,19 @@ export async function GET(request: NextRequest) {
 
   const missedToday = todayLogs
     .filter((log) => {
+      const activeTasks = log.tasks.filter((t) => !t.omitted).length
       const completed = log.tasks.filter((t) => t.completed).length
-      return completed < 9
+      return completed < activeTasks
     })
     .map((log) => {
       const mentor = log.mentorId as unknown as { name: string; campus: string; assignedBatches: { batchId: string }[] }
+      const activeTasks = log.tasks.filter((t) => !t.omitted).length
       return {
         mentorName: mentor?.name ?? 'Unknown',
         campus: mentor?.campus ?? '',
         batchId: log.batchId,
         tasksCompleted: log.tasks.filter((t) => t.completed).length,
+        tasksActive: activeTasks,
       }
     })
 

@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   sendToUser(visit.classTeacherId.toString(), { type: 'notification', data: ctNotif.toObject() })
 
   // Notify each admin with their own stored notification
-  const admins = await User.find({ role: 'admin', isActive: true }).select('_id').lean()
+  const admins = await User.find({ role: 'admin', isActive: { $ne: false } }).select('_id').lean()
   await Promise.all(admins.map(async (admin) => {
     const adminNotif = await Notification.create({ recipientId: admin._id, type: 'visit_report_submitted', message: msg, relatedId: visit._id })
     sendToUser(admin._id.toString(), { type: 'notification', data: adminNotif.toObject() })

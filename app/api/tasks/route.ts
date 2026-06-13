@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       query.mentorId = { $in: me.assignedMentors }
     } else if (me?.campus) {
       // Fall back to campus-based: all mentors at the same campus
-      const campusMentors = await User.find({ role: 'mentor', campus: me.campus, isActive: true }).select('_id').lean()
+      const campusMentors = await User.find({ role: 'mentor', campus: me.campus, isActive: { $ne: false } }).select('_id').lean()
       query.mentorId = { $in: campusMentors.map((m) => m._id) }
     } else {
       query.mentorId = { $in: [] }

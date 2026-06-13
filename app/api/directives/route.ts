@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     query.$or = [
       { targetScope: 'all' },
       { targetScope: 'regional_head' },
+      { targetScope: 'individual', targetMentorId: user.userId },
     ]
   }
 
@@ -84,9 +85,9 @@ export async function POST(request: NextRequest) {
   // Build recipient query based on scope
   let recipientQuery: Record<string, unknown>
   if (targetScope === 'regional_head') {
-    recipientQuery = { role: 'regional_head', isActive: true }
+    recipientQuery = { role: 'regional_head', isActive: { $ne: false } }
   } else {
-    recipientQuery = { role: 'mentor', isActive: true }
+    recipientQuery = { role: 'mentor', isActive: { $ne: false } }
     if (targetScope === 'region' && targetRegion) recipientQuery.region = targetRegion
     if (targetScope === 'campus' && targetCampus) recipientQuery.campus = targetCampus
     if (targetScope === 'individual' && targetMentorId) recipientQuery._id = targetMentorId

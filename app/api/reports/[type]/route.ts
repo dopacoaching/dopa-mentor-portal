@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: { type: st
       break
     }
     case 'batch-compliance': {
-      const mentorQuery: Record<string, unknown> = { role: 'mentor', isActive: true }
+      const mentorQuery: Record<string, unknown> = { role: 'mentor', isActive: { $ne: false } }
       if (campus) mentorQuery.campus = campus
       const mentors = await User.find(mentorQuery).select('-password')
       const mentorIds = mentors.map((m) => m._id)
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest, { params }: { params: { type: st
       break
     }
     case 'payment-summary': {
-      const mentors = await User.find({ role: 'mentor', isActive: true }).select('name assignedBatches')
+      const mentors = await User.find({ role: 'mentor', isActive: { $ne: false } }).select('name assignedBatches')
       const mentorIds = mentors.map((m) => m._id)
       const [allTasks, allDoubts, allVisits] = await Promise.all([
         TaskLog.find({ mentorId: { $in: mentorIds }, date: { $gte: start, $lte: end } }).lean(),

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     sendToRole('admin', { type: 'notification', data: { message: msg, type: 'unverified_tasks' } })
 
     // Create a notification for every admin so it appears in their bell
-    const admins = await User.find({ role: 'admin', isActive: true }).select('_id').lean()
+    const admins = await User.find({ role: 'admin', isActive: { $ne: false } }).select('_id').lean()
     await Promise.all(
       admins.map((admin) =>
         Notification.create({

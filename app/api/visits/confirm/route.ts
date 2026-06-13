@@ -4,7 +4,7 @@ import { requireRole, isAuthResult } from '@/lib/middleware'
 import Visit from '@/models/Visit'
 import User from '@/models/User'
 import Notification from '@/models/Notification'
-import { sendToUser, sendToRole } from '@/lib/sse'
+import { sendToUser } from '@/lib/sse'
 import { logAudit } from '@/lib/audit'
 
 export async function POST(request: NextRequest) {
@@ -29,18 +29,28 @@ export async function POST(request: NextRequest) {
   await visit.save()
 
   const mentor = await User.findById(authResult.user.userId).select('name')
+  const mentorName = mentor?.name ?? 'Unknown'
   const message = action === 'confirm'
-    ? `${mentor?.name} confirmed the visit on ${visit.visitDate.toDateString()}.`
-    : `${mentor?.name} requested a change for visit on ${visit.visitDate.toDateString()}${reason ? `: ${reason}` : '.'}`
+    ? `${mentorName} confirmed the visit on ${visit.visitDate.toDateString()}.`
+    : `${mentorName} requested a change for visit on ${visit.visitDate.toDateString()}${reason ? `: ${reason}` : '.'}`
 
+  const notifType = action === 'confirm' ? 'visit_confirmed' : 'visit_change_requested'
+
+  // Notify the class teacher (stored + real-time)
   const ctNotif = await Notification.create({
     recipientId: visit.classTeacherId,
-    type: action === 'confirm' ? 'visit_confirmed' : 'visit_change_requested',
+    type: notifType,
     message,
     relatedId: visit._id,
   })
   sendToUser(visit.classTeacherId.toString(), { type: 'notification', data: ctNotif.toObject() })
-  sendToRole('admin', { type: 'notification', data: ctNotif.toObject() })
+
+  // Notify each admin with their own stored notification
+  const admins = await User.find({ role: 'admin', isActive: { $ne: false } }).select('_id').lean()
+  await Promise.all(admins.map(async (admin) => {
+    const adminNotif = await Notification.create({ recipientId: admin._id, type: notifType, message, relatedId: visit._id })
+    sendToUser(admin._id.toString(), { type: 'notification', data: adminNotif.toObject() })
+  }))
 
   logAudit({ user: authResult.user, action: `visit.${action}`, targetType: 'Visit', targetId: visitId, details: { reason: reason || null }, request })
 

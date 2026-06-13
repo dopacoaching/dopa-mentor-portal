@@ -32,6 +32,16 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   if (!isAuthResult(authResult)) return authResult
 
   await connectDB()
+  const { searchParams } = new URL(request.url)
+  const permanent = searchParams.get('permanent') === 'true'
+
+  if (permanent) {
+    const directive = await Directive.findByIdAndDelete(params.id)
+    if (!directive) return NextResponse.json({ error: 'Directive not found' }, { status: 404 })
+    logAudit({ user: authResult.user, action: 'directive.archive', targetType: 'Directive', targetId: params.id, details: { title: directive.title, permanent: true }, request })
+    return NextResponse.json({ message: 'Directive deleted' })
+  }
+
   const directive = await Directive.findByIdAndUpdate(params.id, { isActive: false }, { new: true })
   if (!directive) return NextResponse.json({ error: 'Directive not found' }, { status: 404 })
 

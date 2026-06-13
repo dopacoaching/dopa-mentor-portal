@@ -30,7 +30,7 @@ export async function GET(request: NextRequest, { params }: { params: { month: s
 
   const { start, end } = getMonthRange(month, year)
 
-  const mentorQuery: Record<string, unknown> = { role: 'mentor', isActive: true }
+  const mentorQuery: Record<string, unknown> = { role: 'mentor', isActive: { $ne: false } }
   if (user.role === 'mentor') mentorQuery._id = user.userId
 
   const mentors = await User.find(mentorQuery).select('name assignedBatches')
