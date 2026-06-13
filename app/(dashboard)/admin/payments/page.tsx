@@ -131,7 +131,7 @@ export default function AdminPaymentsPage() {
                 <span>Total doubts: {selected.details.totalDoubts}</span>
                 <span>Extra doubts: {selected.details.extraDoubts}</span>
                 <span>Completed visits: {selected.details.completedVisits}</span>
-                <span>Tasks verified: {selected.details.taskVerified ? 'Yes' : 'No'}</span>
+                <span>Verified days: {selected.details.verifiedDays}</span>
               </div>
             </div>
           )}

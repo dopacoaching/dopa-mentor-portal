@@ -207,7 +207,7 @@ export interface PaymentBreakdown {
     completedVisits: number
     totalDoubts: number
     extraDoubts: number
-    taskVerified: boolean
+    verifiedDays: number
     meetingAttended: boolean
   }
 }

@@ -29,6 +29,7 @@ export function calculateMentorPayment(input: PaymentInput): PaymentBreakdown {
   } = input
 
   const completedVisits = visits.filter((v) => v.countedForPayment).length
+  const verifiedDays = taskLogs.filter((log) => log.status === 'verified').length
 
   const totalSubjects = doubtLogs.reduce(
     (acc, log) => {
@@ -49,8 +50,6 @@ export function calculateMentorPayment(input: PaymentInput): PaymentBreakdown {
     totalSubjects.mathematics +
     totalSubjects.general
 
-  const hasVerifiedTask = taskLogs.some((log) => log.status === 'verified')
-
   const meetingPay = meetingAttended ? 500 : 0
 
   if (mentorType === 'offline') {
@@ -60,9 +59,9 @@ export function calculateMentorPayment(input: PaymentInput): PaymentBreakdown {
       month,
       year,
       completedVisits,
+      verifiedDays,
       totalDoubts,
       totalSubjects,
-      hasVerifiedTask,
       meetingPay,
       meetingAttended,
     })
@@ -73,8 +72,8 @@ export function calculateMentorPayment(input: PaymentInput): PaymentBreakdown {
       month,
       year,
       completedVisits,
+      verifiedDays,
       totalDoubts,
-      hasVerifiedTask,
       meetingPay,
       meetingAttended,
       visits,
@@ -88,9 +87,9 @@ function calculateOfflinePayment(params: {
   month: number
   year: number
   completedVisits: number
+  verifiedDays: number
   totalDoubts: number
   totalSubjects: { physics: number; chemistry: number; biology: number; mathematics: number; general: number }
-  hasVerifiedTask: boolean
   meetingPay: number
   meetingAttended: boolean
 }): PaymentBreakdown {
@@ -100,15 +99,16 @@ function calculateOfflinePayment(params: {
     month,
     year,
     completedVisits,
+    verifiedDays,
     totalDoubts,
     totalSubjects,
-    hasVerifiedTask,
     meetingPay,
     meetingAttended,
   } = params
 
   const basicPay = 3000
-  const dteamPay = hasVerifiedTask ? 1500 : 0
+  // ₹50 per day with a verified task log
+  const dteamPay = verifiedDays * 50
 
   let doubtWebBase = 0
   let doubtWebExtra = 0
@@ -141,10 +141,8 @@ function calculateOfflinePayment(params: {
     }
   }
 
-  let travelAllowance = 0
-  if (completedVisits >= 3) travelAllowance = 1000
-  else if (completedVisits === 2) travelAllowance = 667
-  else if (completedVisits === 1) travelAllowance = 334
+  // ₹1000 / 3 visits = ₹333.33 per visit, capped at ₹1000
+  const travelAllowance = parseFloat(Math.min(1000, completedVisits * (1000 / 3)).toFixed(2))
 
   const total = basicPay + dteamPay + doubtWebBase + doubtWebExtra + travelAllowance + meetingPay
 
@@ -165,7 +163,7 @@ function calculateOfflinePayment(params: {
       completedVisits,
       totalDoubts,
       extraDoubts: Math.max(0, totalDoubts - 300),
-      taskVerified: hasVerifiedTask,
+      verifiedDays,
       meetingAttended,
     },
   }
@@ -177,8 +175,8 @@ function calculateOnlinePayment(params: {
   month: number
   year: number
   completedVisits: number
+  verifiedDays: number
   totalDoubts: number
-  hasVerifiedTask: boolean
   meetingPay: number
   meetingAttended: boolean
   visits: IVisitDocument[]
@@ -188,15 +186,15 @@ function calculateOnlinePayment(params: {
     mentorName,
     month,
     year,
+    verifiedDays,
     totalDoubts,
-    hasVerifiedTask,
     meetingPay,
     meetingAttended,
     visits,
   } = params
 
   const basicPay = 1000
-  const whatsappActivities = hasVerifiedTask ? 1500 : 0
+  const whatsappActivities = verifiedDays > 0 ? 1500 : 0
   const weeklyQuiz = visits.some((v) => (v.visitType === 'campus_group' || v.visitType === 'merged_group') && v.countedForPayment)
     ? 750
     : 0
@@ -204,9 +202,11 @@ function calculateOnlinePayment(params: {
     ? 750
     : 0
   const doubtWeb = totalDoubts >= 300 ? 2000 : 0
+  // Online mentors have no travel allowance; session pay (quiz + 1-on-1) is stored in travelAllowance field
+  const sessionPay = weeklyQuiz + oneToOne
   const total = Math.min(
     6500,
-    basicPay + whatsappActivities + weeklyQuiz + oneToOne + doubtWeb + meetingPay
+    basicPay + whatsappActivities + sessionPay + doubtWeb + meetingPay
   )
 
   return {
@@ -219,14 +219,14 @@ function calculateOnlinePayment(params: {
     dteamPay: whatsappActivities,
     doubtWebBase: doubtWeb,
     doubtWebExtra: 0,
-    travelAllowance: weeklyQuiz + oneToOne,
+    travelAllowance: sessionPay,
     meetingPay,
     total,
     details: {
       completedVisits: params.completedVisits,
       totalDoubts,
       extraDoubts: Math.max(0, totalDoubts - 300),
-      taskVerified: hasVerifiedTask,
+      verifiedDays,
       meetingAttended,
     },
   }
