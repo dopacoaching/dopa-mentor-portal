@@ -194,7 +194,7 @@ function calculateOnlinePayment(params: {
   } = params
 
   const basicPay = 1000
-  const whatsappActivities = verifiedDays > 0 ? 1500 : 0
+  const whatsappActivities = verifiedDays * 50
   const weeklyQuiz = visits.some((v) => (v.visitType === 'campus_group' || v.visitType === 'merged_group') && v.countedForPayment)
     ? 750
     : 0
