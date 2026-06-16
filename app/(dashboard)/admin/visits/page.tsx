@@ -5,6 +5,7 @@ import { MapPin } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatDate } from '@/lib/utils'
+import { apiGet } from '@/lib/client/api'
 import type { IVisit, IUser } from '@/types'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -29,9 +30,7 @@ export default function AdminVisitsPage() {
     setLoading(true)
     setError(false)
     try {
-      const r = await fetch(`/api/visits?month=${month}&year=${year}`)
-      if (!r.ok) throw new Error()
-      const d = await r.json()
+      const d = await apiGet<{ visits?: (Omit<IVisit, 'mentorId'> & { mentorId: IUser })[] }>(`/api/visits?month=${month}&year=${year}`)
       setVisits(d.visits ?? [])
     } catch {
       setError(true)

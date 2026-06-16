@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/utils'
+import { apiSend, apiPut, apiDelete } from '@/lib/client/api'
 import type { IDirective } from '@/types'
 
 const REGIONS = ['Calicut', 'Kottakkal', 'Thrissur', 'IG']
@@ -130,9 +131,8 @@ export default function AdminDirectivesPage() {
         targetCampus: scope === 'campus' ? targetCampus : null,
         targetMentorId: (scope === 'individual' || scope === 'individual_rh') ? apiMentorId : null,
       }
-      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const d = await r.json()
-      if (!r.ok) { toast.error(d.error); return }
+      const { ok, data: d } = await apiSend<{ error?: string }>(method, url, body)
+      if (!ok) { toast.error(d.error); return }
       toast.success(editDirective ? 'Directive updated' : 'Directive published!')
       setShowCreate(false)
       setEditDirective(null)
@@ -142,25 +142,21 @@ export default function AdminDirectivesPage() {
 
   async function handleArchive(id: string) {
     if (!window.confirm('Archive this directive? It will no longer be visible to mentors.')) return
-    const r = await fetch(`/api/directives/${id}`, { method: 'DELETE' })
-    if (r.ok) { toast.success('Directive archived'); await fetchDirectives() }
+    const { ok } = await apiDelete(`/api/directives/${id}`)
+    if (ok) { toast.success('Directive archived'); await fetchDirectives() }
     else { toast.error('Failed to archive directive') }
   }
 
   async function handleRestore(id: string) {
-    const r = await fetch(`/api/directives/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: true }),
-    })
-    if (r.ok) { toast.success('Directive restored'); await fetchDirectives() }
+    const { ok } = await apiPut(`/api/directives/${id}`, { isActive: true })
+    if (ok) { toast.success('Directive restored'); await fetchDirectives() }
     else { toast.error('Failed to restore directive') }
   }
 
   async function handleDelete(id: string, title: string) {
     if (!window.confirm(`Permanently delete "${title}"? This cannot be undone.`)) return
-    const r = await fetch(`/api/directives/${id}?permanent=true`, { method: 'DELETE' })
-    if (r.ok) { toast.success('Directive deleted'); await fetchDirectives() }
+    const { ok } = await apiDelete(`/api/directives/${id}?permanent=true`)
+    if (ok) { toast.success('Directive deleted'); await fetchDirectives() }
     else { toast.error('Failed to delete directive') }
   }
 

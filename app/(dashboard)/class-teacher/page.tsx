@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
+import { apiGet } from '@/lib/client/api'
 import type { ITaskLog, IUser, IVisit } from '@/types'
 
 export default function ClassTeacherDashboard() {
@@ -23,8 +24,8 @@ export default function ClassTeacherDashboard() {
     const m = now.getMonth() + 1
     const y = now.getFullYear()
     Promise.all([
-      fetch(`/api/tasks?month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
-      fetch(`/api/visits?month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
+      apiGet<{ logs?: (ITaskLog & { mentorId: IUser })[] }>(`/api/tasks?month=${m}&year=${y}`),
+      apiGet<{ visits?: IVisit[] }>(`/api/visits?month=${m}&year=${y}`),
     ]).then(([tasks, vis]) => {
       const logs = tasks.logs ?? []
       const pendingLogs = logs.filter((l: ITaskLog) => l.status === 'submitted')

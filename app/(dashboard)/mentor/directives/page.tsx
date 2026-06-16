@@ -5,6 +5,7 @@ import { BookOpen, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
+import { apiGet } from '@/lib/client/api'
 import type { IDirective } from '@/types'
 
 export default function MentorDirectivesPage() {
@@ -14,8 +15,7 @@ export default function MentorDirectivesPage() {
   const [viewDirective, setViewDirective] = useState<IDirective | null>(null)
 
   useEffect(() => {
-    fetch('/api/directives')
-      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+    apiGet<{ directives?: IDirective[] }>('/api/directives')
       .then((d) => setDirectives(d.directives ?? []))
       .catch(() => setError(true))
       .finally(() => setLoading(false))

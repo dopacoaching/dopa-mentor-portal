@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { roleLabel } from '@/lib/utils'
+import { apiGet, apiPost, apiPut } from '@/lib/client/api'
 import type { IUser } from '@/types'
 
 const REGIONS = ['Calicut', 'Kottakkal', 'Thrissur', 'IG']
@@ -205,9 +206,7 @@ export default function UsersPage() {
     try {
       const params = new URLSearchParams({ sort })
       if (filterRole !== 'all') params.set('role', filterRole)
-      const r = await fetch(`/api/users?${params}`)
-      if (!r.ok) throw new Error()
-      const d = await r.json()
+      const d = await apiGet<{ users?: IUser[] }>(`/api/users?${params}`)
       setUsers(d.users ?? [])
     } catch {
       setError(true)
@@ -219,18 +218,16 @@ export default function UsersPage() {
   useEffect(() => { fetchUsers() }, [fetchUsers])
 
   async function handleCreate(data: Record<string, unknown>) {
-    const r = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-    const d = await r.json()
-    if (!r.ok) { toast.error(d.error); throw new Error(d.error) }
+    const { ok, data: d } = await apiPost<{ error?: string }>('/api/users', data)
+    if (!ok) { toast.error(d.error); throw new Error(d.error) }
     toast.success('User created')
     await fetchUsers()
   }
 
   async function handleEdit(data: Record<string, unknown>) {
     if (!editUser) return
-    const r = await fetch(`/api/users/${editUser._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-    const d = await r.json()
-    if (!r.ok) { toast.error(d.error); throw new Error(d.error) }
+    const { ok, data: d } = await apiPut<{ error?: string }>(`/api/users/${editUser._id}`, data)
+    if (!ok) { toast.error(d.error); throw new Error(d.error) }
     toast.success('User updated')
     await fetchUsers()
   }
@@ -238,9 +235,9 @@ export default function UsersPage() {
   async function toggleActive(user: IUser) {
     const action = user.isActive ? 'deactivate' : 'reactivate'
     if (!window.confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${user.name}?`)) return
-    const r = await fetch(`/api/users/${user._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: !user.isActive }) })
-    if (r.ok) { toast.success(`User ${user.isActive ? 'deactivated' : 'reactivated'}`); await fetchUsers() }
-    else { const d = await r.json(); toast.error(d.error ?? 'Failed to update user') }
+    const { ok, data: d } = await apiPut<{ error?: string }>(`/api/users/${user._id}`, { isActive: !user.isActive })
+    if (ok) { toast.success(`User ${user.isActive ? 'deactivated' : 'reactivated'}`); await fetchUsers() }
+    else { toast.error(d.error ?? 'Failed to update user') }
   }
 
   return (

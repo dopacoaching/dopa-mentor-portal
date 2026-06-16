@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
+import { apiGet } from '@/lib/client/api'
 
 interface DashboardData {
   activeMentors: number
@@ -27,8 +28,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    fetch('/api/admin/dashboard')
-      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+    apiGet<DashboardData>('/api/admin/dashboard')
       .then((d) => setData(d))
       .catch(() => setError(true))
       .finally(() => setLoading(false))

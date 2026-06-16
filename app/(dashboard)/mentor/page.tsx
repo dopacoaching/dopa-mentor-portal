@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import StatCard from '@/components/dashboard/StatCard'
 import { useAppSelector } from '@/store/hooks'
 import { formatDate } from '@/lib/utils'
+import { apiGet } from '@/lib/client/api'
 import type { ITaskLog, IDoubtLog, IDirective, IVisit } from '@/types'
 
 export default function MentorDashboard() {
@@ -28,10 +29,10 @@ export default function MentorDashboard() {
     const m = now.getMonth() + 1
     const y = now.getFullYear()
     Promise.all([
-      fetch(`/api/tasks/${userId}?month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
-      fetch(`/api/doubts/${userId}?month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
-      fetch('/api/directives').then((r) => { if (!r.ok) throw new Error(); return r.json() }),
-      fetch(`/api/visits?mentorId=${userId}&month=${m}&year=${y}`).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
+      apiGet<{ logs?: ITaskLog[] }>(`/api/tasks/${userId}?month=${m}&year=${y}`),
+      apiGet<{ summary?: { total?: number } }>(`/api/doubts/${userId}?month=${m}&year=${y}`),
+      apiGet<{ directives?: IDirective[] }>('/api/directives'),
+      apiGet<{ visits?: IVisit[] }>(`/api/visits?mentorId=${userId}&month=${m}&year=${y}`),
     ]).then(([tasks, doubts, dirs, vis]) => {
       const todayStr = now.toDateString()
       const todayLog = tasks.logs?.find((l: ITaskLog) => new Date(l.date).toDateString() === todayStr) ?? null

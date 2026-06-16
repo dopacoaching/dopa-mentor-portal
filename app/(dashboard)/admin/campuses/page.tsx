@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { apiPost, apiPut, apiDelete } from '@/lib/client/api'
 
 const REGIONS = [
   { value: 'Calicut', label: 'Calicut' },
@@ -123,13 +124,8 @@ export default function CampusesPage() {
     if (!name.trim() || !region) { toast.error('Name and region are required'); return }
     setSaving(true)
     try {
-      const r = await fetch('/api/campuses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), region, batches: newBatches }),
-      })
-      const d = await r.json()
-      if (!r.ok) { toast.error(d.error); return }
+      const { ok, data: d } = await apiPost<{ error?: string }>('/api/campuses', { name: name.trim(), region, batches: newBatches })
+      if (!ok) { toast.error(d.error); return }
       toast.success('Campus added')
       setName('')
       setRegion('')
@@ -140,8 +136,8 @@ export default function CampusesPage() {
 
   async function handleDelete(id: string, campusName: string) {
     if (!window.confirm(`Remove "${campusName}"? This cannot be undone.`)) return
-    const r = await fetch(`/api/campuses/${id}`, { method: 'DELETE' })
-    if (r.ok) { toast.success(`${campusName} removed`); await fetchCampuses() }
+    const { ok } = await apiDelete(`/api/campuses/${id}`)
+    if (ok) { toast.success(`${campusName} removed`); await fetchCampuses() }
     else { toast.error('Failed to remove campus') }
   }
 
@@ -154,13 +150,8 @@ export default function CampusesPage() {
     if (!editCampus) return
     setEditSaving(true)
     try {
-      const r = await fetch(`/api/campuses/${editCampus._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ batches: editBatches }),
-      })
-      const d = await r.json()
-      if (!r.ok) { toast.error(d.error); return }
+      const { ok, data: d } = await apiPut<{ error?: string }>(`/api/campuses/${editCampus._id}`, { batches: editBatches })
+      if (!ok) { toast.error(d.error); return }
       toast.success('Batches updated')
       setEditCampus(null)
       await fetchCampuses()
