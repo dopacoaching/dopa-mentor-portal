@@ -16,7 +16,10 @@ export async function GET(request: NextRequest) {
   }
 
   const query: Record<string, unknown> = { isActive: { $ne: false } }
-  if (region) query.region = { $regex: new RegExp(`^${region}$`, 'i') }
+  if (region) {
+    const escaped = region.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    query.region = { $regex: new RegExp(`^${escaped}$`, 'i') }
+  }
 
   const raw = await Campus.find(query).sort({ name: 1 }).lean()
 

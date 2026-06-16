@@ -23,6 +23,9 @@ export async function POST(request: NextRequest) {
   if (visit.mentorId.toString() !== authResult.user.userId) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+  if (visit.status !== 'scheduled') {
+    return NextResponse.json({ error: 'Visit is not in a confirmable state' }, { status: 409 })
+  }
 
   visit.status = action === 'confirm' ? 'confirmed' : 'change_requested'
   if (action === 'request_change' && reason) visit.mentorChangeReason = reason

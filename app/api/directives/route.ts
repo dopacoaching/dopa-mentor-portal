@@ -21,9 +21,15 @@ export async function GET(request: NextRequest) {
 
   if (user.role === 'mentor') {
     const me = await User.findById(user.userId).select('region campus')
+    const REGION_CANONICAL: Record<string, string> = {
+      calicut: 'Calicut', kottakkal: 'Kottakkal', thrissur: 'Thrissur', ig: 'IG',
+    }
+    const userRegion = me?.region
+      ? (REGION_CANONICAL[me.region.toLowerCase()] ?? me.region)
+      : me?.region
     query.$or = [
       { targetScope: 'all' },
-      { targetScope: 'region', targetRegion: me?.region },
+      { targetScope: 'region', targetRegion: userRegion },
       { targetScope: 'campus', targetCampus: me?.campus },
       { targetScope: 'individual', targetMentorId: user.userId },
     ]
@@ -88,7 +94,10 @@ export async function POST(request: NextRequest) {
     recipientQuery = { role: 'regional_head', isActive: { $ne: false } }
   } else {
     recipientQuery = { role: 'mentor', isActive: { $ne: false } }
-    if (targetScope === 'region' && targetRegion) recipientQuery.region = targetRegion
+    if (targetScope === 'region' && targetRegion) {
+      const escapedRegion = targetRegion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      recipientQuery.region = { $regex: new RegExp(`^${escapedRegion}$`, 'i') }
+    }
     if (targetScope === 'campus' && targetCampus) recipientQuery.campus = targetCampus
     if (targetScope === 'individual' && targetMentorId) recipientQuery._id = targetMentorId
   }

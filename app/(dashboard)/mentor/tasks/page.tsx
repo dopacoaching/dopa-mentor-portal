@@ -127,7 +127,7 @@ export default function MentorTasksPage() {
   const activeTasks = Object.values(tasks).filter((t) => !t.omitted)
   const completedCount = activeTasks.filter((t) => t.completed).length
   const omittedCount = Object.values(tasks).filter((t) => t.omitted).length
-  const totalActive = 9 - omittedCount
+  const totalActive = TASK_KEYS.length - omittedCount
 
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate()
   const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
