@@ -50,6 +50,26 @@ export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+/** Escapes a string so it can be used literally inside a RegExp. */
+export function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+const REGION_CANONICAL: Record<string, string> = {
+  calicut: 'Calicut',
+  kottakkal: 'Kottakkal',
+  thrissur: 'Thrissur',
+  ig: 'IG',
+}
+
+/**
+ * Normalizes a region value to its canonical casing (handles legacy lowercase
+ * values in the DB). Unknown regions are returned unchanged.
+ */
+export function canonicalRegion(region: string): string {
+  return REGION_CANONICAL[region.toLowerCase()] ?? region
+}
+
 export function roleLabel(role: string): string {
   switch (role) {
     case 'admin': return 'Admin'
