@@ -1,93 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import { requireRole, isAuthResult } from '@/lib/middleware'
-import User from '@/models/User'
-import Visit from '@/models/Visit'
-import CTVisitReview from '@/models/CTVisitReview'
-import { logAudit } from '@/lib/audit'
+import { authorize } from '@/lib/api/auth'
+import { handleApiError } from '@/lib/api/errors'
+import { listCtReviews, createCtReview } from '@/lib/services/visits.service'
 
 export async function GET(request: NextRequest) {
-  const authResult = await requireRole(request, ['class_teacher', 'admin', 'regional_head'])
-  if (!isAuthResult(authResult)) return authResult
-
-  await connectDB()
-  const { searchParams } = new URL(request.url)
-  const visitId = searchParams.get('visitId')
-  const mentorId = searchParams.get('mentorId')
-  const month = searchParams.get('month')
-  const year = searchParams.get('year')
-  const { user } = authResult
-
-  const query: Record<string, unknown> = {}
-  if (visitId) query.visitId = visitId
-  if (mentorId) query.mentorId = mentorId
-
-  if (user.role === 'class_teacher') {
-    query.classTeacherId = user.userId
-  } else if (user.role === 'regional_head') {
-    const me = await User.findById(user.userId).select('region').lean()
-    if (me?.region) {
-      const regionCTs = await User.find({ role: 'class_teacher', region: me.region }).select('_id').lean()
-      query.classTeacherId = { $in: regionCTs.map((ct) => ct._id) }
-    }
+  try {
+    const user = authorize(request, ['class_teacher', 'admin', 'regional_head'])
+    const { searchParams } = new URL(request.url)
+    const reviews = await listCtReviews(user, {
+      visitId: searchParams.get('visitId'),
+      mentorId: searchParams.get('mentorId'),
+      month: searchParams.get('month'),
+      year: searchParams.get('year'),
+    })
+    return NextResponse.json({ reviews })
+  } catch (error) {
+    return handleApiError(error)
   }
-
-  if (month && year) {
-    const start = new Date(Number(year), Number(month) - 1, 1)
-    const end = new Date(Number(year), Number(month), 0, 23, 59, 59, 999)
-    query.visitDate = { $gte: start, $lte: end }
-  }
-
-  const reviews = await CTVisitReview.find(query)
-    .populate('mentorId', 'name campus')
-    .populate('classTeacherId', 'name')
-    .sort({ createdAt: -1 })
-  return NextResponse.json({ reviews })
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireRole(request, ['class_teacher', 'admin'])
-  if (!isAuthResult(authResult)) return authResult
-
-  await connectDB()
-  const { user } = authResult
-  const body = await request.json()
-  const { visitId, wasPunctual, interactionQuality, interactionComments, directiveCovered, overallEffectiveness, observations, recommendedAction } = body
-
-  if (!visitId) return NextResponse.json({ error: 'visitId required' }, { status: 400 })
-
-  const visit = await Visit.findById(visitId)
-  if (!visit) return NextResponse.json({ error: 'Visit not found' }, { status: 404 })
-
-  if (user.role === 'class_teacher' && visit.classTeacherId.toString() !== user.userId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  try {
+    const user = authorize(request, ['class_teacher', 'admin'])
+    const body = await request.json()
+    const review = await createCtReview(user, body, request)
+    return NextResponse.json({ review }, { status: 201 })
+  } catch (error) {
+    return handleApiError(error)
   }
-
-  const existing = await CTVisitReview.findOne({ visitId })
-  if (existing) return NextResponse.json({ error: 'Review already submitted' }, { status: 409 })
-
-  const review = await CTVisitReview.create({
-    visitId,
-    classTeacherId: user.userId,
-    mentorId: visit.mentorId,
-    visitDate: visit.visitDate,
-    wasPunctual: wasPunctual ?? true,
-    interactionQuality: interactionQuality ?? 3,
-    interactionComments: interactionComments ?? '',
-    directiveCovered: directiveCovered ?? 'yes',
-    overallEffectiveness: overallEffectiveness ?? 3,
-    observations: observations ?? '',
-    recommendedAction: recommendedAction ?? 'none',
-    submittedAt: new Date(),
-  })
-
-  visit.ctReviewSubmitted = true
-  if (visit.mentorReportSubmitted && visit.status === 'completed') {
-    visit.countedForPayment = true
-  }
-  await visit.save()
-
-  logAudit({ user, action: 'visit.ct_review', targetType: 'Visit', targetId: visitId, details: { mentorId: visit.mentorId.toString(), overallEffectiveness }, request })
-
-  return NextResponse.json({ review }, { status: 201 })
 }

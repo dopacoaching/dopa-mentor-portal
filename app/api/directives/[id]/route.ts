@@ -1,51 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import { requireRole, isAuthResult } from '@/lib/middleware'
-import Directive from '@/models/Directive'
-import { logAudit } from '@/lib/audit'
+import { authorize } from '@/lib/api/auth'
+import { handleApiError } from '@/lib/api/errors'
+import { updateDirective, archiveDirective } from '@/lib/services/directives.service'
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const authResult = await requireRole(request, ['admin'])
-  if (!isAuthResult(authResult)) return authResult
-
-  await connectDB()
-  const body = await request.json()
-  const { title, content, targetScope, targetRegion, targetCampus, targetMentorId, isActive } = body
-  const updates: Record<string, unknown> = {}
-  if (title !== undefined) updates.title = title
-  if (content !== undefined) updates.content = content
-  if (targetScope !== undefined) updates.targetScope = targetScope
-  if (targetRegion !== undefined) updates.targetRegion = targetRegion ?? null
-  if (targetCampus !== undefined) updates.targetCampus = targetCampus ?? null
-  if (targetMentorId !== undefined) updates.targetMentorId = targetMentorId ?? null
-  if (isActive !== undefined) updates.isActive = isActive
-  const directive = await Directive.findByIdAndUpdate(params.id, { $set: updates }, { new: true })
-  if (!directive) return NextResponse.json({ error: 'Directive not found' }, { status: 404 })
-
-  logAudit({ user: authResult.user, action: 'directive.update', targetType: 'Directive', targetId: params.id, details: { changed: Object.keys(updates) }, request })
-
-  return NextResponse.json({ directive })
+  try {
+    const user = authorize(request, ['admin'])
+    const body = await request.json()
+    const directive = await updateDirective(user, params.id, body, request)
+    return NextResponse.json({ directive })
+  } catch (error) {
+    return handleApiError(error)
+  }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  const authResult = await requireRole(request, ['admin'])
-  if (!isAuthResult(authResult)) return authResult
-
-  await connectDB()
-  const { searchParams } = new URL(request.url)
-  const permanent = searchParams.get('permanent') === 'true'
-
-  if (permanent) {
-    const directive = await Directive.findByIdAndDelete(params.id)
-    if (!directive) return NextResponse.json({ error: 'Directive not found' }, { status: 404 })
-    logAudit({ user: authResult.user, action: 'directive.archive', targetType: 'Directive', targetId: params.id, details: { title: directive.title, permanent: true }, request })
-    return NextResponse.json({ message: 'Directive deleted' })
+  try {
+    const user = authorize(request, ['admin'])
+    const permanent = new URL(request.url).searchParams.get('permanent') === 'true'
+    const message = await archiveDirective(user, params.id, permanent, request)
+    return NextResponse.json({ message })
+  } catch (error) {
+    return handleApiError(error)
   }
-
-  const directive = await Directive.findByIdAndUpdate(params.id, { isActive: false }, { new: true })
-  if (!directive) return NextResponse.json({ error: 'Directive not found' }, { status: 404 })
-
-  logAudit({ user: authResult.user, action: 'directive.archive', targetType: 'Directive', targetId: params.id, details: { title: directive.title }, request })
-
-  return NextResponse.json({ message: 'Directive archived' })
 }

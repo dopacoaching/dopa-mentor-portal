@@ -131,3 +131,61 @@ export async function createDirective(
 
   return directive
 }
+
+export interface UpdateDirectiveInput {
+  title?: string
+  content?: string
+  targetScope?: string
+  targetRegion?: string | null
+  targetCampus?: string | null
+  targetMentorId?: string | null
+  isActive?: boolean
+}
+
+/** Updates an existing directive (admin only) with a field-by-field allow-list. */
+export async function updateDirective(
+  user: JWTPayload,
+  id: string,
+  input: UpdateDirectiveInput,
+  request?: NextRequest
+) {
+  await connectDB()
+  const { title, content, targetScope, targetRegion, targetCampus, targetMentorId, isActive } = input
+  const updates: Record<string, unknown> = {}
+  if (title !== undefined) updates.title = title
+  if (content !== undefined) updates.content = content
+  if (targetScope !== undefined) updates.targetScope = targetScope
+  if (targetRegion !== undefined) updates.targetRegion = targetRegion ?? null
+  if (targetCampus !== undefined) updates.targetCampus = targetCampus ?? null
+  if (targetMentorId !== undefined) updates.targetMentorId = targetMentorId ?? null
+  if (isActive !== undefined) updates.isActive = isActive
+
+  const directive = await Directive.findByIdAndUpdate(id, { $set: updates }, { new: true })
+  if (!directive) throw ApiError.notFound('Directive not found')
+
+  logAudit({ user, action: 'directive.update', targetType: 'Directive', targetId: id, details: { changed: Object.keys(updates) }, request })
+
+  return directive
+}
+
+/** Archives (soft delete) or permanently deletes a directive (admin only). */
+export async function archiveDirective(
+  user: JWTPayload,
+  id: string,
+  permanent: boolean,
+  request?: NextRequest
+) {
+  await connectDB()
+
+  if (permanent) {
+    const directive = await Directive.findByIdAndDelete(id)
+    if (!directive) throw ApiError.notFound('Directive not found')
+    logAudit({ user, action: 'directive.archive', targetType: 'Directive', targetId: id, details: { title: directive.title, permanent: true }, request })
+    return 'Directive deleted'
+  }
+
+  const directive = await Directive.findByIdAndUpdate(id, { isActive: false }, { new: true })
+  if (!directive) throw ApiError.notFound('Directive not found')
+  logAudit({ user, action: 'directive.archive', targetType: 'Directive', targetId: id, details: { title: directive.title }, request })
+  return 'Directive archived'
+}
