@@ -2,10 +2,9 @@ import type { NextRequest } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import DoubtLog from '@/models/DoubtLog'
 import Notification from '@/models/Notification'
-import { sendToUser } from '@/lib/sse'
 import { getDayStart, getDayEnd } from '@/lib/utils'
 import { logAudit } from '@/lib/audit'
-import { ApiError } from '@/lib/api/errors'
+import { assertCanAccessMentor } from '@/lib/services/access.service'
 import type { JWTPayload } from '@/types'
 
 const DOUBT_WEB_QUOTA = 300
@@ -62,13 +61,12 @@ export async function logDoubts(user: JWTPayload, body: DoubtCountsInput, reques
       createdAt: { $gte: new Date(now.getFullYear(), now.getMonth(), 1) },
     })
     if (!alreadyNotified) {
-      const notification = await Notification.create({
+      await Notification.create({
         recipientId: user.userId,
         type: 'doubt_quota_reached',
         message: `You've cleared 300+ doubts this month! You're earning the Doubt Web bonus.`,
         relatedId: log._id,
       })
-      sendToUser(user.userId, { type: 'notification', data: notification.toObject() })
     }
   }
 
@@ -91,9 +89,7 @@ export async function getMentorDoubts(
   month: number,
   year: number
 ) {
-  if (requester.role === 'mentor' && requester.userId !== mentorId) {
-    throw ApiError.forbidden()
-  }
+  await assertCanAccessMentor(requester, mentorId)
 
   await connectDB()
   const logs = await DoubtLog.find({ mentorId, month, year }).sort({ date: 1 })

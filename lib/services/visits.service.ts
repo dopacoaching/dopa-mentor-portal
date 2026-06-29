@@ -5,7 +5,6 @@ import User from '@/models/User'
 import CTVisitReview from '@/models/CTVisitReview'
 import MentorVisitReport from '@/models/MentorVisitReport'
 import Notification from '@/models/Notification'
-import { sendToUser } from '@/lib/sse'
 import { logAudit } from '@/lib/audit'
 import { ApiError } from '@/lib/api/errors'
 import type { JWTPayload } from '@/types'
@@ -74,13 +73,12 @@ export async function scheduleVisit(
     countedForPayment: false,
   })
 
-  const notification = await Notification.create({
+  await Notification.create({
     recipientId: mentorId,
     type: 'visit_scheduled',
     message: `A campus visit has been scheduled for ${date.toDateString()} at ${mentor.campus || 'your campus'}.`,
     relatedId: visit._id,
   })
-  sendToUser(mentorId, { type: 'notification', data: notification.toObject() })
 
   logAudit({ user, action: 'visit.schedule', targetType: 'Visit', targetId: visit._id.toString(), details: { mentorId, visitDate, visitType, campus: visit.campus }, request })
 
@@ -168,19 +166,17 @@ export async function respondToVisit(
 
   const notifType = action === 'confirm' ? 'visit_confirmed' : 'visit_change_requested'
 
-  const ctNotif = await Notification.create({
+  await Notification.create({
     recipientId: visit.classTeacherId,
     type: notifType,
     message,
     relatedId: visit._id,
   })
-  sendToUser(visit.classTeacherId.toString(), { type: 'notification', data: ctNotif.toObject() })
 
   const admins = await User.find({ role: 'admin', isActive: { $ne: false } }).select('_id').lean()
-  await Promise.all(admins.map(async (admin) => {
-    const adminNotif = await Notification.create({ recipientId: admin._id, type: notifType, message, relatedId: visit._id })
-    sendToUser(admin._id.toString(), { type: 'notification', data: adminNotif.toObject() })
-  }))
+  await Promise.all(admins.map((admin) =>
+    Notification.create({ recipientId: admin._id, type: notifType, message, relatedId: visit._id })
+  ))
 
   logAudit({ user, action: `visit.${action}`, targetType: 'Visit', targetId: visitId, details: { reason: reason || null }, request })
 
@@ -327,14 +323,12 @@ export async function submitMentorReport(
 
   const msg = `Visit report submitted for ${visit.campus} on ${visit.visitDate.toDateString()}.`
 
-  const ctNotif = await Notification.create({ recipientId: visit.classTeacherId, type: 'visit_report_submitted', message: msg, relatedId: visit._id })
-  sendToUser(visit.classTeacherId.toString(), { type: 'notification', data: ctNotif.toObject() })
+  await Notification.create({ recipientId: visit.classTeacherId, type: 'visit_report_submitted', message: msg, relatedId: visit._id })
 
   const admins = await User.find({ role: 'admin', isActive: { $ne: false } }).select('_id').lean()
-  await Promise.all(admins.map(async (admin) => {
-    const adminNotif = await Notification.create({ recipientId: admin._id, type: 'visit_report_submitted', message: msg, relatedId: visit._id })
-    sendToUser(admin._id.toString(), { type: 'notification', data: adminNotif.toObject() })
-  }))
+  await Promise.all(admins.map((admin) =>
+    Notification.create({ recipientId: admin._id, type: 'visit_report_submitted', message: msg, relatedId: visit._id })
+  ))
 
   logAudit({ user, action: 'visit.mentor_report', targetType: 'Visit', targetId: visitId, details: { campus: visit.campus, visitDate: visit.visitDate }, request })
 

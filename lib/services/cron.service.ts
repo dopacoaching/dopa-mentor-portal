@@ -2,7 +2,6 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import TaskLog from '@/models/TaskLog'
 import Notification from '@/models/Notification'
-import { sendToUser, sendToRole } from '@/lib/sse'
 
 /** Auto-closes today's still-submitted logs that have incomplete tasks. */
 export async function autoCloseTasks() {
@@ -17,6 +16,7 @@ export async function autoCloseTasks() {
   }).populate('mentorId', 'name')
 
   let closed = 0
+  const missedNames: string[] = []
   for (const log of pendingLogs) {
     const hasIncomplete = log.tasks.some((t) => !t.completed && !t.omitted)
     if (hasIncomplete) {
@@ -27,18 +27,32 @@ export async function autoCloseTasks() {
 
       const mentor = log.mentorId as unknown as { _id: { toString(): string }; name: string }
 
-      const mentorNotif = await Notification.create({
+      await Notification.create({
         recipientId: mentor._id,
         type: 'task_missed',
         message: `You missed completing all tasks on ${now.toDateString()}. Your log has been auto-closed.`,
         relatedId: log._id,
       })
-      sendToUser(mentor._id.toString(), { type: 'notification', data: mentorNotif.toObject() })
-
-      const alertMsg = `${mentor.name} missed tasks on ${now.toDateString()}. Log auto-closed.`
-      sendToRole('class_teacher', { type: 'notification', data: { type: 'task_missed', message: alertMsg } })
-      sendToRole('admin', { type: 'notification', data: { type: 'task_missed', message: alertMsg } })
+      missedNames.push(mentor.name)
     }
+  }
+
+  // Notify class teachers and admins about the auto-closed logs (persisted for poll-based delivery).
+  if (missedNames.length > 0) {
+    const supervisors = await User.find({
+      role: { $in: ['class_teacher', 'admin'] },
+      isActive: { $ne: false },
+    }).select('_id').lean()
+
+    const alerts = missedNames.flatMap((name) => {
+      const alertMsg = `${name} missed tasks on ${now.toDateString()}. Log auto-closed.`
+      return supervisors.map((s) => ({
+        recipientId: s._id,
+        type: 'task_missed',
+        message: alertMsg,
+      }))
+    })
+    if (alerts.length > 0) await Notification.insertMany(alerts)
   }
 
   return { processed: pendingLogs.length, closed }
@@ -95,7 +109,6 @@ export async function checkConsecutiveMisses() {
             })
           )
         )
-        sendToRole('admin', { type: 'notification', data: { type: 'consecutive_miss', message: msg } })
         flagged++
       }
     }
@@ -113,8 +126,6 @@ export async function checkUnverifiedTasks() {
 
   if (stale.length > 0) {
     const msg = `${stale.length} task submission${stale.length > 1 ? 's have' : ' has'} been unverified for more than 24 hours.`
-
-    sendToRole('admin', { type: 'notification', data: { message: msg, type: 'unverified_tasks' } })
 
     const admins = await User.find({ role: 'admin', isActive: { $ne: false } }).select('_id').lean()
     await Promise.all(

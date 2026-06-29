@@ -59,7 +59,7 @@ export async function generateReport(type: string, filters: ReportFilters): Prom
         const tasks = allTasks.filter((t) => t.mentorId.toString() === id)
         const doubts = allDoubts.filter((d) => d.mentorId.toString() === id)
         const visits = allVisits.filter((v) => v.mentorId.toString() === id)
-        const mentorType = m.assignedBatches?.[0]?.batchType === 'online' ? 'online' : 'offline'
+        const mentorType = m.assignedBatches?.some((b) => b.batchType === 'online') ? 'online' : 'offline'
         return calculateMentorPayment({ mentorId: id, mentorName: m.name, mentorType, month, year, taskLogs: tasks as never, doubtLogs: doubts as never, visits: visits as never, meetingAttended: false })
       })
       return { payments, month, year }

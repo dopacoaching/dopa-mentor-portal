@@ -6,59 +6,58 @@ import { addNotification, setNotifications } from '@/store/slices/notificationSl
 import { toast } from 'sonner'
 import type { INotification } from '@/types'
 
+// Poll interval for new notifications. Short-lived requests instead of a
+// persistent SSE stream — this avoids keeping a serverless function provisioned.
+const POLL_INTERVAL = 60_000
+
 export function useNotifications() {
   const dispatch = useAppDispatch()
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated)
-  const retryDelay = useRef(1000)
-  const esRef = useRef<EventSource | null>(null)
-  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const seenIds = useRef<Set<string>>(new Set())
+  const initialized = useRef(false)
 
   useEffect(() => {
     if (!isAuthenticated) return
 
-    fetch('/api/notifications?limit=20')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.notifications) dispatch(setNotifications(data.notifications))
-      })
-      .catch(() => {})
+    let cancelled = false
 
-    function connect() {
-      const es = new EventSource('/api/notifications/stream')
-      esRef.current = es
+    async function poll() {
+      // Skip when the tab is hidden to avoid unnecessary invocations.
+      if (typeof document !== 'undefined' && document.hidden) return
+      try {
+        const r = await fetch('/api/notifications?limit=20')
+        if (!r.ok) return
+        const data = await r.json()
+        if (cancelled || !data.notifications) return
 
-      es.onopen = () => {
-        retryDelay.current = 1000
-      }
+        const notifications: INotification[] = data.notifications
 
-      es.addEventListener('notification', (e) => {
-        try {
-          const notification: INotification = JSON.parse(e.data)
-          dispatch(addNotification(notification))
-          toast.info(notification.message, { duration: 5000 })
-        } catch {}
-      })
+        if (!initialized.current) {
+          // First load: seed the store without toasting existing notifications.
+          dispatch(setNotifications(notifications))
+          for (const n of notifications) seenIds.current.add(n._id)
+          initialized.current = true
+          return
+        }
 
-      es.addEventListener('chat_message', (e) => {
-        // Dispatch to a window event so the chat page can pick it up
-        window.dispatchEvent(new MessageEvent('chat_message', { data: e.data }))
-      })
-
-      es.onerror = () => {
-        es.close()
-        esRef.current = null
-        retryTimer.current = setTimeout(() => {
-          retryDelay.current = Math.min(retryDelay.current * 2, 30000)
-          connect()
-        }, retryDelay.current)
+        // Toast + store any notifications we haven't seen yet (oldest first).
+        const fresh = notifications.filter((n) => !seenIds.current.has(n._id))
+        for (const n of fresh.reverse()) {
+          seenIds.current.add(n._id)
+          dispatch(addNotification(n))
+          toast.info(n.message, { duration: 5000 })
+        }
+      } catch {
+        // Network hiccup — next tick will retry.
       }
     }
 
-    connect()
+    poll()
+    const id = setInterval(poll, POLL_INTERVAL)
 
     return () => {
-      esRef.current?.close()
-      if (retryTimer.current) clearTimeout(retryTimer.current)
+      cancelled = true
+      clearInterval(id)
     }
   }, [isAuthenticated, dispatch])
 }

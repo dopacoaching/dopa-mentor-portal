@@ -3,7 +3,6 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Conversation from '@/models/Conversation'
 import Message from '@/models/Message'
-import { sendToUser } from '@/lib/sse'
 import { ApiError } from '@/lib/api/errors'
 import type { JWTPayload } from '@/types'
 
@@ -43,6 +42,11 @@ export async function getOrCreateConversation(user: JWTPayload, partnerId?: stri
 
   const partner = await User.findById(partnerId).select('name role isActive').lean()
   if (!partner || !partner.isActive) throw ApiError.notFound('User not found')
+
+  // Conversations must include an admin: non-admins can only chat with admins.
+  if (user.role !== 'admin' && partner.role !== 'admin') {
+    throw ApiError.forbidden('You can only chat with administrators')
+  }
 
   const myId = new mongoose.Types.ObjectId(user.userId)
   const theirId = new mongoose.Types.ObjectId(partnerId)
@@ -148,13 +152,6 @@ export async function sendMessage(user: JWTPayload, conversationId: string, body
   )
 
   const msgObj = message.toObject()
-
-  for (const participantId of conversation.participants) {
-    const pid = participantId.toString()
-    if (pid !== user.userId) {
-      sendToUser(pid, { type: 'chat_message', data: { conversationId, message: msgObj } })
-    }
-  }
 
   return msgObj
 }

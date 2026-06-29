@@ -152,20 +152,33 @@ export default function ChatPage() {
 
   useEffect(() => { loadConversations() }, [loadConversations])
 
-  // Real-time SSE
+  // Poll for new messages / unread counts (replaces the persistent SSE stream).
   useEffect(() => {
-    const handleSSE = (e: Event) => {
-      const ev = e as MessageEvent
+    const id = setInterval(async () => {
+      if (typeof document !== 'undefined' && document.hidden) return
       try {
-        const data = JSON.parse(ev.data)
-        if (data.conversationId === activeConvId) {
-          setMessages((prev) => [...prev, data.message])
+        if (activeConvId) {
+          const mr = await fetch(`/api/chat/${activeConvId}/messages`)
+          if (mr.ok) {
+            const md = await mr.json()
+            const next: IMessage[] = md.messages ?? []
+            setMessages((prev) => {
+              // Avoid re-render / scroll jump when nothing changed.
+              if (
+                prev.length === next.length &&
+                prev[prev.length - 1]?._id === next[next.length - 1]?._id
+              ) {
+                return prev
+              }
+              return next
+            })
+          }
         }
         loadConversations()
       } catch {}
-    }
-    window.addEventListener('chat_message', handleSSE)
-    return () => window.removeEventListener('chat_message', handleSSE)
+    }, 5000)
+
+    return () => clearInterval(id)
   }, [activeConvId, loadConversations])
 
   // Scroll to bottom

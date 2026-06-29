@@ -4,11 +4,11 @@ import { connectDB } from '@/lib/mongodb'
 import TaskLog from '@/models/TaskLog'
 import User from '@/models/User'
 import Notification from '@/models/Notification'
-import { sendToUser } from '@/lib/sse'
 import { TASK_KEYS, TASK_NAMES } from '@/types'
 import { getDayStart, getDayEnd } from '@/lib/utils'
 import { logAudit } from '@/lib/audit'
 import { ApiError } from '@/lib/api/errors'
+import { assertCanAccessMentor } from '@/lib/services/access.service'
 import type { JWTPayload } from '@/types'
 
 /** Task logs visible to the current user, optionally scoped to a month. */
@@ -47,9 +47,7 @@ export async function listTaskLogsByMentor(
   month: string | null,
   year: string | null
 ) {
-  if (requester.role === 'mentor' && requester.userId !== mentorId) {
-    throw ApiError.forbidden()
-  }
+  await assertCanAccessMentor(requester, mentorId)
   await connectDB()
   const query: Record<string, unknown> = { mentorId }
   if (month && year) {
@@ -160,6 +158,9 @@ export async function verifyTaskLog(
   const log = await TaskLog.findById(logId)
   if (!log) throw ApiError.notFound('Task log not found')
 
+  // Class teachers may only verify mentors assigned to them or in their campus.
+  await assertCanAccessMentor(user, log.mentorId.toString())
+
   log.status = action as 'verified' | 'flagged'
   log.verifiedBy = new mongoose.Types.ObjectId(user.userId)
   log.verificationNote = note || null
@@ -169,13 +170,12 @@ export async function verifyTaskLog(
   logAudit({ user, action: `task.${action}`, targetType: 'TaskLog', targetId: logId, details: { note: note || null, mentorId: log.mentorId.toString() }, request })
 
   if (action === 'flagged') {
-    const notification = await Notification.create({
+    await Notification.create({
       recipientId: log.mentorId,
       type: 'task_flagged',
       message: `Your task log for ${log.date.toDateString()} was flagged${note ? `: ${note}` : '.'}`,
       relatedId: log._id,
     })
-    sendToUser(log.mentorId.toString(), { type: 'notification', data: notification.toObject() })
   }
 
   return log
