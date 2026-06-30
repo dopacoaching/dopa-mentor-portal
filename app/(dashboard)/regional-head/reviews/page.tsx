@@ -64,7 +64,7 @@ export default function RegionalHeadReviewsPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">CT Visit Reviews</h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Read-only — your region's submitted reviews</p>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Read-only — your region&apos;s submitted reviews</p>
         </div>
         <div className="flex gap-2">
           <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>

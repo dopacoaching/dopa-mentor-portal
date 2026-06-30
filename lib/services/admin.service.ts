@@ -22,6 +22,7 @@ export async function getDashboard() {
     activeClassTeachers,
     todayLogs,
     pendingVerifications,
+    pendingVerificationsCount,
     upcomingVisits,
     doubtLogs,
   ] = await Promise.all([
@@ -29,6 +30,7 @@ export async function getDashboard() {
     User.countDocuments({ role: 'class_teacher', isActive: { $ne: false } }),
     TaskLog.find({ date: { $gte: todayStart, $lte: todayEnd } }).populate('mentorId', 'name campus assignedBatches'),
     TaskLog.find({ status: 'submitted', date: { $lt: now } }).populate('mentorId', 'name assignedBatches').sort({ createdAt: 1 }).limit(50),
+    TaskLog.countDocuments({ status: 'submitted', date: { $lt: now } }),
     Visit.find({ visitDate: { $gte: now, $lte: sevenDaysLater }, status: { $in: ['scheduled', 'confirmed'] } })
       .populate('mentorId', 'name')
       .sort({ visitDate: 1 })
@@ -85,7 +87,7 @@ export async function getDashboard() {
       completed: todayLogs.length,
       total: activeMentors,
     },
-    pendingVerifications: pendingVerifications.length,
+    pendingVerifications: pendingVerificationsCount,
     missedToday,
     pendingVerificationList: pendingVerificationList.slice(0, 10),
     upcomingVisits: upcomingVisits.map((v) => ({

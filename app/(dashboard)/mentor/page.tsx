@@ -94,7 +94,7 @@ export default function MentorDashboard() {
             </div>
             <Progress value={Math.min(100, progressPct)} />
             <Button size="sm" variant="outline" className="w-full mt-3" onClick={() => router.push('/mentor/doubts')}>
-              <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> Log Today's Doubts
+              <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> Log Today&apos;s Doubts
             </Button>
           </CardContent>
         </Card>
@@ -104,7 +104,7 @@ export default function MentorDashboard() {
             <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-3">Quick Actions</p>
             <div className="space-y-2">
               <Button size="sm" className="w-full" onClick={() => router.push('/mentor/tasks')}>
-                <CheckSquare className="w-3.5 h-3.5 mr-1.5" /> Today's Checklist
+                <CheckSquare className="w-3.5 h-3.5 mr-1.5" /> Today&apos;s Checklist
               </Button>
               <Button size="sm" variant="outline" className="w-full" onClick={() => router.push('/mentor/visits')}>
                 <MapPin className="w-3.5 h-3.5 mr-1.5" /> My Visits

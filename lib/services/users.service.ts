@@ -2,6 +2,9 @@ import type { NextRequest } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
+import Notification from '@/models/Notification'
+import Conversation from '@/models/Conversation'
+import Message from '@/models/Message'
 import { logAudit } from '@/lib/audit'
 import { ApiError } from '@/lib/api/errors'
 import type { JWTPayload } from '@/types'
@@ -149,6 +152,24 @@ export async function updateUser(
     return updated
   }
 
+  // Guard against locking everyone out by deactivating the wrong account.
+  if (isActive === false) {
+    if (id === user.userId) {
+      throw ApiError.badRequest('You cannot deactivate your own account')
+    }
+    const target = await User.findById(id).select('role').lean()
+    if (target?.role === 'admin') {
+      const otherActiveAdmins = await User.countDocuments({
+        role: 'admin',
+        isActive: { $ne: false },
+        _id: { $ne: id },
+      })
+      if (otherActiveAdmins === 0) {
+        throw ApiError.conflict('Cannot deactivate the last active admin')
+      }
+    }
+  }
+
   const updates: Record<string, unknown> = {}
   if (name !== undefined) updates.name = name
   if (role !== undefined) updates.role = role
@@ -169,8 +190,38 @@ export async function updateUser(
 
 export async function deleteUser(user: JWTPayload, id: string, request?: NextRequest) {
   await connectDB()
-  const deleted = await User.findByIdAndDelete(id)
-  if (!deleted) throw ApiError.notFound('User not found')
 
-  logAudit({ user, action: 'user.delete', targetType: 'User', targetId: id, details: { name: deleted.name, username: deleted.username }, request })
+  if (user.userId === id) {
+    throw ApiError.badRequest('You cannot delete your own account')
+  }
+
+  const target = await User.findById(id).select('name username role')
+  if (!target) throw ApiError.notFound('User not found')
+
+  // Never delete the last remaining active admin — that would lock everyone out.
+  if (target.role === 'admin') {
+    const otherActiveAdmins = await User.countDocuments({
+      role: 'admin',
+      isActive: { $ne: false },
+      _id: { $ne: id },
+    })
+    if (otherActiveAdmins === 0) {
+      throw ApiError.conflict('Cannot delete the last active admin')
+    }
+  }
+
+  await User.findByIdAndDelete(id)
+
+  // Clean up live references. Historical records (task/doubt/visit logs,
+  // reviews, audit entries) are intentionally preserved.
+  const convos = await Conversation.find({ participants: id }).select('_id').lean()
+  const convoIds = convos.map((c) => c._id)
+  await Promise.all([
+    User.updateMany({ assignedMentors: id }, { $pull: { assignedMentors: id } }),
+    Notification.deleteMany({ recipientId: id }),
+    convoIds.length ? Message.deleteMany({ conversationId: { $in: convoIds } }) : Promise.resolve(),
+    convoIds.length ? Conversation.deleteMany({ _id: { $in: convoIds } }) : Promise.resolve(),
+  ])
+
+  logAudit({ user, action: 'user.delete', targetType: 'User', targetId: id, details: { name: target.name, username: target.username }, request })
 }

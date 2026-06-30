@@ -75,7 +75,7 @@ export default function PWAInstallBanner() {
                 </svg>
                 Share
               </span>{' '}
-              button then <span className="font-semibold">"Add to Home Screen"</span>
+              button then <span className="font-semibold">&quot;Add to Home Screen&quot;</span>
             </p>
           </div>
           <button onClick={handleDismiss} className="text-white/50 hover:text-white flex-shrink-0 p-1 mt-0.5 -mr-1">

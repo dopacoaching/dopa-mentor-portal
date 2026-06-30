@@ -150,7 +150,7 @@ export default function MentorTasksPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Today's Checklist</CardTitle>
+            <CardTitle className="text-base">Today&apos;s Checklist</CardTitle>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500 dark:text-slate-400">
                 {completedCount}/{totalActive} done

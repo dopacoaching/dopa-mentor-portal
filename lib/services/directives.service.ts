@@ -3,7 +3,6 @@ import { connectDB } from '@/lib/mongodb'
 import Directive from '@/models/Directive'
 import User from '@/models/User'
 import Notification from '@/models/Notification'
-import { sendToUser } from '@/lib/sse'
 import { logAudit } from '@/lib/audit'
 import { ApiError } from '@/lib/api/errors'
 import { canonicalRegion, escapeRegex } from '@/lib/utils'
@@ -109,15 +108,14 @@ export async function createDirective(
 
   const recipients = await User.find(recipientQuery).select('_id')
   await Promise.all(
-    recipients.map(async (r) => {
-      const notif = await Notification.create({
+    recipients.map((r) =>
+      Notification.create({
         recipientId: r._id,
         type: 'directive_published',
         message: `New directive: ${title}`,
         relatedId: directive._id,
       })
-      sendToUser(r._id.toString(), { type: 'notification', data: notif.toObject() })
-    })
+    )
   )
 
   logAudit({

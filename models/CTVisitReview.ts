@@ -24,10 +24,10 @@ const ctVisitReviewSchema = new Schema<ICTVisitReviewDocument>(
     visitDate: { type: Date, required: true },
     wasPunctual: { type: Boolean, required: true },
     interactionQuality: { type: Number, required: true, min: 1, max: 5 },
-    interactionComments: { type: String, required: true },
+    interactionComments: { type: String, default: '' },
     directiveCovered: { type: String, enum: ['yes', 'partially', 'no'], required: true },
     overallEffectiveness: { type: Number, required: true, min: 1, max: 5 },
-    observations: { type: String, required: true },
+    observations: { type: String, default: '' },
     recommendedAction: {
       type: String,
       enum: ['none', 'needs_followup', 'escalate_admin'],
